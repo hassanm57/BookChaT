@@ -1,0 +1,26 @@
+[
+  {
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "author": "J.K. Rowling",
+    "genre": "Fantasy",
+    "pdf_filename": "85jkr_harrypotter_1.pdf",
+    "cover_image": "hp1_cover.jpg"
+  },
+  {
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "author": "J.K. Rowling",
+    "genre": "Fantasy",
+    "pdf_filename": "3 - Harry Potter and the Prisoner of Azkaban.pdf",
+    "cover_image": "hp3_cover.jpg"
+  },
+  {
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "author": "Neil A. Campbell & Jane B. Reece",
+    "genre": "Science / Textbook",
+    "pdf_filename": "Biology-by-Neil-A.-Campbell-Jane-B.-Reece-z-lib.org_.pdf",
+    "cover_image": "biology_campbell_cover.jpg"
+  }
+]
