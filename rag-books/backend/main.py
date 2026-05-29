@@ -14,7 +14,10 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+
+from backend.config import COVERS_DIR, PDF_DIR
 
 from backend.retriever import retrieve
 from backend.llm import generate
@@ -31,6 +34,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount("/covers", StaticFiles(directory=str(COVERS_DIR)), name="covers")
+app.mount("/pdfs", StaticFiles(directory=str(PDF_DIR)), name="pdfs")
 
 
 class ChatRequest(BaseModel):
