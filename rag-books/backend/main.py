@@ -3,25 +3,65 @@ FastAPI application entry point.
 
 Responsibilities:
 - Initialises the FastAPI app and configures CORS
-- Registers all routers: /books, /ingest, /upload, /collections, /chat
-- Serves static frontend files in development
-- Starts uvicorn server when run directly
+- Exposes /books (list + detail) and /chat (streaming SSE) endpoints
+- Loads environment variables from .env at startup
 """
 
-# --- Imports ---
+import json
+from pathlib import Path
 
-# --- App initialisation ---
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
-# --- CORS middleware ---
+from backend.retriever import retrieve
+from backend.llm import generate
 
-# --- Router registration ---
-# include books router      → GET /books, GET /books/{book_id}
-# include ingest router     → POST /ingest  (seed PDFs from PDF_DIR)
-# include upload router     → POST /upload  (user-uploaded PDFs)
-# include collections router → CRUD /collections
-# include chat router       → POST /chat, GET /chat/stream
+load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
 
-# --- Static file serving ---
+BOOKS_PATH = Path(__file__).resolve().parent.parent / "books.json"
 
-# --- Entry point ---
-# uvicorn with host="0.0.0.0", port=8000, reload=True
+app = FastAPI(title="BookChat API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+class ChatRequest(BaseModel):
+    book_id: str
+    query: str
+
+
+def _load_books() -> list[dict]:
+    return json.loads(BOOKS_PATH.read_text())
+
+
+@app.get("/books")
+def list_books():
+    return _load_books()
+
+
+@app.get("/books/{book_id}")
+def get_book(book_id: str):
+    books = _load_books()
+    for book in books:
+        if book["book_id"] == book_id:
+            return book
+    raise HTTPException(status_code=404, detail="Book not found")
+
+
+@app.post("/chat")
+async def chat(request: ChatRequest):
+    chunks = retrieve(request.query, request.book_id)
+    if not chunks:
+        raise HTTPException(status_code=404, detail="No relevant passages found for this book")
+    return StreamingResponse(
+        generate(request.query, chunks),
+        media_type="text/event-stream",
+    )
