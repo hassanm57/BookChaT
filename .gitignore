@@ -18,3 +18,13 @@ node_modules/
 #
 CLAUDE.md
 books/
+rag-books/data/pdfs/*
+!rag-books/data/pdfs/.gitkeep
+rag-books/data/covers/*
+!rag-books/data/covers/.gitkeep
+rag-books/data/covers/*
+!rag-books/data/covers/.gitkeep
+rag-books/data/eval/*
+!rag-books/data/eval/testset.json
+rag-books/data/uploads/*
+!rag-books/data/uploads/.gitkeep
