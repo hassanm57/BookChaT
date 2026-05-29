@@ -8,13 +8,23 @@ Responsibilities:
 - Handles batching for large ingestions to manage memory
 """
 
-# --- Imports ---
+from sentence_transformers import SentenceTransformer
+from backend.config import EMBEDDING_MODEL
 
-# --- Model loader (singleton) ---
-# _model = None
-# get_model() → loads once, returns cached instance
+_model: SentenceTransformer | None = None
 
-# --- embed_chunks(chunks: List[dict]) → List[dict] ---
-# Extract texts, encode in batches
-# Attach vector to each chunk dict
-# Return enriched chunks
+
+def get_model() -> SentenceTransformer:
+    global _model
+    if _model is None:
+        _model = SentenceTransformer(EMBEDDING_MODEL)
+    return _model
+
+
+def embed_chunks(chunks: list[dict]) -> list[dict]:
+    model = get_model()
+    texts = [c["text"] for c in chunks]
+    vectors = model.encode(texts, batch_size=64, show_progress_bar=True)
+    for chunk, vector in zip(chunks, vectors):
+        chunk["vector"] = vector.tolist()
+    return chunks

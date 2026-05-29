@@ -11,9 +11,29 @@ Responsibilities:
 - Returns a list of chunk dicts ready for the embedder
 """
 
-# --- Imports ---
+from backend.config import CHUNK_SIZE, CHUNK_OVERLAP
 
-# --- chunk_text(pages, book_id) → List[dict] ---
-# For each page:
-#   sliding window over text with step = CHUNK_SIZE - CHUNK_OVERLAP
-#   each chunk: {text, book_id, page_number, char_offset}
+
+def chunk_text(pages: list[dict], book_id: str) -> list[dict]:
+    chunks = []
+    step = CHUNK_SIZE - CHUNK_OVERLAP
+
+    for page in pages:
+        text = page["text"]
+        page_number = page["page_number"]
+
+        start = 0
+        while start < len(text):
+            chunk_text = text[start : start + CHUNK_SIZE]
+            if chunk_text.strip():
+                chunks.append(
+                    {
+                        "text": chunk_text,
+                        "book_id": book_id,
+                        "page_number": page_number,
+                        "char_offset": start,
+                    }
+                )
+            start += step
+
+    return chunks
