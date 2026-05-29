@@ -1,6 +1,6 @@
 fastapi==0.111.0
 uvicorn==0.29.0
-pymupdf==1.24.3
+pymupdf>=1.25.0
 sentence-transformers==2.7.0
 qdrant-client==1.9.1
 rank-bm25==0.2.2
