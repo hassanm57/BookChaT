@@ -3074,3 +3074,46 @@ a { text-decoration: none; color: inherit; }
   line-height: 1.65;
   max-width: 440px;
 }
+
+.bm-end-cta {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  pointer-events: auto;
+  z-index: 10;
+}
+
+.bm-end-cta-label {
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.bm-end-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.bm-end-cta-btn:hover {
+  opacity: 0.88;
+  transform: translateY(-2px);
+}

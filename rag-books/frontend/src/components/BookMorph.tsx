@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, useTransform, useSpring, useMotionValue, useInView } from 'framer-motion'
 import { useLenis } from 'lenis/react'
+import { useNavigate } from 'react-router-dom'
 
 const IMG_W = 70
 const IMG_H = 95
@@ -73,6 +74,7 @@ export default function BookMorph() {
   const [phase] = useState<Phase>('circle')
   const [morphReady, setMorphReady] = useState(false)
   const lenis = useLenis()
+  const navigate = useNavigate()
 
   // ── Virtual scroll (mirrors original component's approach) ───────────────
   const virtualScroll = useMotionValue(0)
@@ -153,7 +155,7 @@ export default function BookMorph() {
       const el = sectionRef.current
       if (!el) return
       const top = el.getBoundingClientRect().top
-      if (top <= -80 && vRef.current < V_MAX - 10) lock()
+      if (top <= -80) lock()
     }
     window.addEventListener('scroll', checkLock, { passive: true })
 
@@ -225,7 +227,7 @@ export default function BookMorph() {
           </motion.h2>
           <motion.p
             className="bm-text-sub"
-            animate={{ opacity: phase === 'circle' && morphValue < 0.3 ? 1 : 0 }}
+            animate={{ opacity: morphValue < 0.3 ? 1 : 0 }}
             transition={{ duration: 0.7, delay: 0.18 }}
           >
             Upload any PDF — novels, textbooks, research papers — and start chatting instantly.
@@ -291,6 +293,21 @@ export default function BookMorph() {
         >
           scroll to explore
         </motion.p>
+
+        {/* CTA — fades in when books have fully scrolled off */}
+        <motion.div
+          className="bm-end-cta"
+          animate={{ opacity: rotateValue > 300 ? 1 : 0, y: rotateValue > 300 ? 0 : 20 }}
+          transition={{ duration: 0.7 }}
+        >
+          <p className="bm-end-cta-label">Ready to start reading differently?</p>
+          <button className="bm-end-cta-btn" onClick={() => navigate('/library')}>
+            Upload your library
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </motion.div>
       </div>
     </div>
   )
