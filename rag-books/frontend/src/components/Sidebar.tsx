@@ -32,7 +32,7 @@ export default function Sidebar() {
   const navigate = useNavigate()
 
   const nav = [
-    { icon: <HomeIcon />, path: '/', label: 'Library' },
+    { icon: <HomeIcon />, path: '/library', label: 'Library' },
     { icon: <SearchIcon />, path: '/search', label: 'Search' },
     { icon: <CollectionsIcon />, path: '/collections', label: 'Collections' },
   ]

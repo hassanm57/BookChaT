@@ -12,13 +12,6 @@ const SearchIcon = () => (
   </svg>
 )
 
-const BellIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-    <path d="M13.73 21a2 2 0 01-3.46 0"/>
-  </svg>
-)
-
 export default function Library() {
   const navigate = useNavigate()
   const [books, setBooks] = useState<Book[]>([])
@@ -70,9 +63,6 @@ export default function Library() {
           <div className="user-area">
             <div className="user-avatar">U</div>
             <span className="user-name">Reader</span>
-            <button className="notif-btn" title="Notifications">
-              <BellIcon />
-            </button>
           </div>
         </header>
 
@@ -122,13 +112,8 @@ export default function Library() {
 
         {/* Status Bar */}
         <div className="status-bar">
-          <div className="status-left">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-            Upload your own books to chat with them —{' '}
-            <a href="#">coming soon</a>
-          </div>
           <div className="status-right">
-            <strong>{String(books.length).padStart(2, '0')}</strong>/ {books.length} books
+            <strong>{String(books.length).padStart(2, '0')}</strong> / {books.length} books
           </div>
         </div>
       </div>
