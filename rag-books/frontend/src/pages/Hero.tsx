@@ -1,38 +1,22 @@
-import { useState, useRef, useEffect } from 'react'
+import { useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import ReactLenis from 'lenis/react'
 import { ContainerScroll } from '../components/ContainerScroll'
 import FeatureOrbit from '../components/FeatureOrbit'
 import HowItWorks from '../components/HowItWorks'
 import { HoverButton } from '../components/HoverButton'
 import OrbInput from '../components/OrbInput'
+import ScrollUI from '../components/ScrollUI'
+import FaqPhone from '../components/FaqPhone'
+import { ScatterReveal } from '../components/ScatterReveal'
 
 const ASCII_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:!?"\'—§¶*#@'
 
 
-
-const faqs = [
-  {
-    q: 'What kinds of books can I use?',
-    a: 'Any PDF — novels, textbooks, research papers, manuals. If it\'s a PDF, you can chat with it.',
-  },
-  {
-    q: 'How accurate are the answers?',
-    a: 'Answers are grounded exclusively in your book\'s text using RAG (retrieval-augmented generation). The AI cites the exact passages it used and won\'t invent facts from outside the text.',
-  },
-  {
-    q: 'Can I upload my own PDFs?',
-    a: 'User uploads are coming in an upcoming release. For now, explore the curated seed library to see BookChat in action.',
-  },
-  {
-    q: 'What\'s the Pro plan?',
-    a: 'Pro ($4.99/mo) will include unlimited uploads, larger context windows, and priority processing. Launching soon.',
-  },
-]
-
 export default function Hero() {
   const navigate = useNavigate()
   const asciiRef = useRef<HTMLPreElement>(null)
-  const [openFaq, setOpenFaq] = useState<number | null>(null)
   const mouseRef = useRef<{ x: number; y: number } | null>(null)
 
   // Allow page to scroll
@@ -64,7 +48,6 @@ export default function Hero() {
     let rows = 0
     let grid: string[] = []
 
-    // Measure actual rendered character width once
     const measureCharW = () => {
       const ctx = document.createElement('canvas').getContext('2d')
       if (ctx) {
@@ -96,7 +79,6 @@ export default function Hero() {
     render()
 
     const ticker = setInterval(() => {
-      // Base ambient update ~1.2% of cells
       const baseUpdates = Math.floor(cols * rows * 0.012)
       for (let i = 0; i < baseUpdates; i++) {
         const idx = Math.floor(Math.random() * grid.length)
@@ -105,7 +87,6 @@ export default function Hero() {
           : ' '
       }
 
-      // Mouse warp: cells near cursor cycle rapidly
       const mouse = mouseRef.current
       if (mouse && pre) {
         const rect = pre.getBoundingClientRect()
@@ -127,7 +108,6 @@ export default function Hero() {
             const dist = Math.sqrt(px * px + py * py)
             if (dist > WARP_RADIUS) continue
 
-            // Closer = higher chance of being a dense warp char
             const intensity = 1 - dist / WARP_RADIUS
             if (Math.random() < intensity * 0.85) {
               grid[r * cols + c] = ASCII_CHARS[Math.floor(Math.random() * ASCII_CHARS.length)]
@@ -159,7 +139,10 @@ export default function Hero() {
   }, [])
 
   return (
+    <ReactLenis root options={{ lerp: 0.09, duration: 1.4, smoothWheel: true }}>
     <div className="hero-page">
+      <ScrollUI />
+
       {/* Nav */}
       <nav className="hero-nav">
         <button className="hero-nav-logo" onClick={() => navigate('/')}>
@@ -170,7 +153,7 @@ export default function Hero() {
           <a className="hero-nav-link" href="#features">Features</a>
           <a className="hero-nav-link" href="#how-it-works">How it works</a>
           <a className="hero-nav-link" href="#faq">FAQ</a>
-          <a className="hero-nav-link" href="#pricing">Pricing</a>
+          <a className="hero-nav-link" href="/pricing">Pricing</a>
         </div>
         <div className="hero-nav-actions">
           <button className="hero-nav-cta" onClick={() => navigate('/library')}>Get started</button>
@@ -178,28 +161,38 @@ export default function Hero() {
         </div>
       </nav>
 
-      {/* ── Section 1: Hero ───────────────────────────────── */}
+      {/* Section 1: Hero */}
       <section className="hero-main-section">
-        {/* ASCII background — scoped to this section */}
         <div className="hero-ascii-wrap">
           <pre ref={asciiRef} className="hero-ascii-pre" aria-hidden="true" />
         </div>
-        <div className="hero-main-content">
+        <motion.div
+          className="hero-main-content"
+          initial={{ opacity: 0, y: 28 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.15 }}
+        >
           <h1 className="hero-headline">
             <span className="hero-headline-line">Your books,</span>
             <span className="hero-headline-line hero-headline-italic">finally alive.</span>
           </h1>
           <OrbInput />
-          <button className="hero-cta" onClick={() => navigate('/library')}>
+          <motion.button
+            className="hero-cta"
+            onClick={() => navigate('/library')}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.45 }}
+          >
             Open your library
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12h14M12 5l7 7-7 7"/>
             </svg>
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </section>
 
-      {/* ── Section 1.5: Scroll animation ────────────────── */}
+      {/* Section 1.5: Scroll animation */}
       <section className="hero-scroll-section">
         <ContainerScroll
           titleComponent={
@@ -254,72 +247,59 @@ export default function Hero() {
         </ContainerScroll>
       </section>
 
-      {/* ── Section 2: Feature orbit ─────────────────────── */}
-      <section id="features" className="hero-section hero-features-section">
-        <div className="hero-section-inner">
-          <p className="hero-section-eyebrow">Features</p>
-          <h2 className="hero-section-heading">Everything you need to read deeper</h2>
-        </div>
+      {/* Section 2: Feature orbit */}
+      <ScatterReveal
+        id="features"
+        eyebrow="Features"
+        title="Everything you need to"
+        titleItalic="read deeper."
+        sectionClass="scatter-sec-features"
+      >
         <FeatureOrbit />
-      </section>
+      </ScatterReveal>
 
-      {/* ── Section 3: How it works ──────────────────────── */}
-      <section id="how-it-works" className="hero-section hero-how-section">
-        <div className="hero-section-inner">
-          <p className="hero-section-eyebrow">How it works</p>
-          <h2 className="hero-section-heading">From PDF to insight in four steps</h2>
-        </div>
+      {/* Section 3: How it works */}
+      <ScatterReveal
+        id="how-it-works"
+        eyebrow="How it works"
+        title="From PDF to insight"
+        titleItalic="in four steps."
+        sectionClass="scatter-sec-how"
+      >
         <HowItWorks />
-      </section>
+      </ScatterReveal>
 
-      {/* ── Section 4: FAQ ───────────────────────────────── */}
-      <section id="faq" className="hero-section hero-faq-section">
-        <div className="hero-section-inner">
-          <p className="hero-section-eyebrow">FAQ</p>
-          <h2 className="hero-section-heading">Common questions</h2>
-          <div className="hero-faq-list">
-            {faqs.map((faq, i) => (
-              <div className={`hero-faq-item ${openFaq === i ? 'open' : ''}`} key={i}>
-                <button
-                  className="hero-faq-trigger"
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                >
-                  <span>{faq.q}</span>
-                  <svg
-                    className="hero-faq-icon"
-                    width="20" height="20" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-                  >
-                    {openFaq === i
-                      ? <path d="M5 12h14"/>
-                      : <path d="M12 5v14M5 12h14"/>
-                    }
-                  </svg>
-                </button>
-                {openFaq === i && (
-                  <div className="hero-faq-answer"><p>{faq.a}</p></div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Section 4: FAQ */}
+      <ScatterReveal
+        id="faq"
+        eyebrow="FAQ"
+        title="Got questions?"
+        titleItalic="Just ask."
+        sectionClass="scatter-sec-faq"
+      >
+        <FaqPhone />
+      </ScatterReveal>
 
-      {/* ── Bottom CTA ───────────────────────────────────── */}
-      <section className="hero-bottom-cta">
-        <h2 className="hero-bottom-cta-heading">Start reading differently.</h2>
-        <button className="hero-cta" onClick={() => navigate('/library')}>
+      {/* Bottom CTA */}
+      <ScatterReveal
+        title="Start reading"
+        titleItalic="differently."
+        sectionClass="scatter-sec-cta"
+        headingClass="hero-bottom-cta-heading"
+      >
+        <button className="hero-cta hero-cta--light" onClick={() => navigate('/library')}>
           Open your library
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M5 12h14M12 5l7 7-7 7"/>
           </svg>
         </button>
-      </section>
+      </ScatterReveal>
 
       {/* Footer */}
       <footer className="hero-footer">
         <span className="hero-footer-copy">© 2026 BookChat - made by hassanM57</span>
       </footer>
     </div>
+    </ReactLenis>
   )
 }
