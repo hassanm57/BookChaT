@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, useTransform, useSpring, useMotionValue, useInView } from 'framer-motion'
 import { useLenis } from 'lenis/react'
+import BookShelf from './BookShelf'
 
 const IMG_W = 70
 const IMG_H = 95
@@ -65,12 +66,9 @@ function Card({ src, index, pos }: { src: string; index: number; pos: Pos }) {
   )
 }
 
-type Phase = 'circle'
-
 export default function BookMorph() {
   const sectionRef  = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ w: 1200, h: 700 })
-  const [phase] = useState<Phase>('circle')
   const [morphReady, setMorphReady] = useState(false)
   const [visible, setVisible] = useState(false)
   const lenis = useLenis()
@@ -297,16 +295,19 @@ export default function BookMorph() {
           scroll to explore
         </motion.p>
 
-        {/* Text — fades in when books have fully scrolled off */}
+        {/* End-state block — fades in when books have fully scrolled off */}
         <div className="bm-end-cta-anchor">
-          <motion.p
-            className="bm-end-text"
-            animate={{ opacity: rotateValue > 300 ? 1 : 0, y: rotateValue > 300 ? 0 : 16 }}
-            transition={{ duration: 0.8 }}
+          <motion.div
+            className="bm-end-block"
+            animate={{ opacity: rotateValue > 300 ? 1 : 0, y: rotateValue > 300 ? 0 : 30 }}
+            transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
           >
-            Upload any book<br></br>novels, textbooks, academic papers, research.<br />
-            <span className="bm-end-text-em">Your entire library, all in one place.</span>
-          </motion.p>
+            <p className="bm-end-text">
+              Upload any book: novels, textbooks, academic papers, research.<br />
+              <span className="bm-end-text-em">Your entire library, all in one place.</span>
+            </p>
+            <BookShelf />
+          </motion.div>
         </div>
       </div>
     </div>
