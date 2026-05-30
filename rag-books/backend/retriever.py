@@ -25,7 +25,7 @@ def get_client() -> QdrantClient:
     return _client
 
 
-def retrieve(query: str, book_id: str, top_k: int = 5) -> list[dict]:
+def retrieve(query: str, book_id: str, top_k: int = 8) -> list[dict]:
     model = get_model()
     query_vector = model.encode(query).tolist()
 

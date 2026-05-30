@@ -10,6 +10,7 @@ interface Message {
   role: 'user' | 'assistant'
   content: string
   citations?: Citation[]
+  followUps?: string[]
 }
 
 interface Props {
@@ -35,14 +36,14 @@ export default function ChatPanel({ bookId, bookTitle, onCitationClick }: Props)
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const sendMessage = useCallback(async () => {
-    const query = input.trim()
-    if (!query || streaming) return
+  const sendMessage = useCallback(async (query?: string) => {
+    const text = (query ?? input).trim()
+    if (!text || streaming) return
 
     setInput('')
     setStreaming(true)
 
-    const userMsg: Message = { role: 'user', content: query }
+    const userMsg: Message = { role: 'user', content: text }
     const assistantMsg: Message = { role: 'assistant', content: '' }
     setMessages(prev => [...prev, userMsg, assistantMsg])
 
@@ -50,7 +51,7 @@ export default function ChatPanel({ bookId, bookTitle, onCitationClick }: Props)
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ book_id: bookId, query }),
+        body: JSON.stringify({ book_id: bookId, query: text }),
       })
 
       if (!res.ok || !res.body) throw new Error('Request failed')
@@ -86,10 +87,13 @@ export default function ChatPanel({ bookId, bookTitle, onCitationClick }: Props)
             } else if (event.type === 'citations') {
               setMessages(prev => {
                 const msgs = [...prev]
-                msgs[msgs.length - 1] = {
-                  ...msgs[msgs.length - 1],
-                  citations: event.sources,
-                }
+                msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], citations: event.sources }
+                return msgs
+              })
+            } else if (event.type === 'follow_ups') {
+              setMessages(prev => {
+                const msgs = [...prev]
+                msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], followUps: event.questions }
                 return msgs
               })
             }
@@ -101,10 +105,7 @@ export default function ChatPanel({ bookId, bookTitle, onCitationClick }: Props)
     } catch {
       setMessages(prev => {
         const msgs = [...prev]
-        msgs[msgs.length - 1] = {
-          ...msgs[msgs.length - 1],
-          content: 'Something went wrong. Please try again.',
-        }
+        msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], content: 'Something went wrong. Please try again.' }
         return msgs
       })
     } finally {
@@ -134,14 +135,13 @@ export default function ChatPanel({ bookId, bookTitle, onCitationClick }: Props)
 
         {messages.map((msg, i) => (
           <div key={i} className={`msg-wrap ${msg.role}`}>
-            {msg.role === 'assistant' && (
-              <div className="msg-avatar">AI</div>
-            )}
+            {msg.role === 'assistant' && <div className="msg-avatar">AI</div>}
             <div className={`msg-bubble msg-${msg.role}`}>
               {msg.content || (streaming && i === messages.length - 1
                 ? <span className="typing-dots"><span /><span /><span /></span>
                 : null
               )}
+
               {msg.citations && msg.citations.length > 0 && (
                 <div className="citation-chips">
                   {msg.citations.map((c, j) => (
@@ -151,7 +151,22 @@ export default function ChatPanel({ bookId, bookTitle, onCitationClick }: Props)
                       onClick={() => onCitationClick(c.page_number)}
                       title={c.text}
                     >
-                      p.{c.page_number} — {c.title}
+                      p.{c.page_number}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {msg.followUps && msg.followUps.length > 0 && (
+                <div className="follow-up-chips">
+                  {msg.followUps.map((q, j) => (
+                    <button
+                      key={j}
+                      className="follow-up-chip"
+                      onClick={() => sendMessage(q)}
+                      disabled={streaming}
+                    >
+                      {q}
                     </button>
                   ))}
                 </div>
@@ -175,7 +190,7 @@ export default function ChatPanel({ bookId, bookTitle, onCitationClick }: Props)
         />
         <button
           className="send-btn"
-          onClick={sendMessage}
+          onClick={() => sendMessage()}
           disabled={!input.trim() || streaming}
           title="Send"
         >

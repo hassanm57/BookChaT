@@ -14,6 +14,7 @@ export default defineConfig({
       },
       '/pdfs': {
         target: 'http://localhost:8000',
+        changeOrigin: true,
       },
     },
   },

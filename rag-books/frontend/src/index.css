@@ -824,6 +824,45 @@ a { text-decoration: none; color: inherit; }
   transform: translateY(-1px);
 }
 
+.follow-up-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.follow-up-chip {
+  display: inline-flex;
+  align-items: center;
+  text-align: left;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  background: var(--bg);
+  padding: 7px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  transition: background var(--transition), color var(--transition), border-color var(--transition), transform var(--transition);
+  cursor: pointer;
+  line-height: 1.4;
+}
+.follow-up-chip::before {
+  content: '↗';
+  margin-right: 6px;
+  font-size: 0.7rem;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+.follow-up-chip:hover:not(:disabled) {
+  background: var(--surface);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+  transform: translateX(3px);
+}
+.follow-up-chip:disabled { opacity: 0.4; cursor: default; }
+
 .chat-input-bar {
   padding: 16px 20px;
   border-top: 1px solid var(--border);
