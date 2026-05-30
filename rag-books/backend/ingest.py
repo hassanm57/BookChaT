@@ -43,7 +43,7 @@ def extract_cover(pdf_path: Path, book_id: str) -> None:
 
 def extract_pages(pdf_path: Path) -> list[dict]:
     doc = fitz.open(pdf_path)
-    pages = [{"page_number": i, "text": page.get_text()} for i, page in enumerate(doc)]
+    pages = [{"page_number": i + 1, "text": page.get_text()} for i, page in enumerate(doc)]
     doc.close()
     return pages
 

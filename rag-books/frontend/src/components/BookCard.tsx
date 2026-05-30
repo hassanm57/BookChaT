@@ -11,16 +11,19 @@ interface Props {
 export default function BookCard({ book, isSelected, onHover, onClick }: Props) {
   return (
     <div
-      className={`book-card ${isSelected ? 'selected' : ''}`}
+      className={`lib-card${isSelected ? ' lib-card--selected' : ''}`}
       onMouseEnter={() => onHover(book)}
       onClick={() => onClick(book)}
     >
-      <div className="book-cover-wrap">
+      <div className="lib-card-cover">
         <CoverImage book={book} />
+        <div className="lib-card-overlay">
+          <span className="lib-card-chat">Chat →</span>
+        </div>
       </div>
-      <div className="book-info">
-        <div className="book-title" title={book.title}>{book.title}</div>
-        <div className="book-author">{book.author}</div>
+      <div className="lib-card-info">
+        <div className="lib-card-title" title={book.title}>{book.title}</div>
+        <div className="lib-card-author">{book.author}</div>
       </div>
     </div>
   )
