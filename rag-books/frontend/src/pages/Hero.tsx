@@ -2,29 +2,13 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ContainerScroll } from '../components/ContainerScroll'
 import FeatureOrbit from '../components/FeatureOrbit'
+import HowItWorks from '../components/HowItWorks'
 import { HoverButton } from '../components/HoverButton'
 import OrbInput from '../components/OrbInput'
 
 const ASCII_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:!?"\'—§¶*#@'
 
 
-const steps = [
-  {
-    n: '01',
-    title: 'Open a book',
-    desc: 'Pick any book from your library. Every page has been embedded into a vector index.',
-  },
-  {
-    n: '02',
-    title: 'Ask a question',
-    desc: 'Type anything — a character name, a theme, a specific scene. The AI searches across every passage.',
-  },
-  {
-    n: '03',
-    title: 'Navigate to the source',
-    desc: 'Citation chips link directly to the exact page. The PDF viewer jumps there in one click.',
-  },
-]
 
 const faqs = [
   {
@@ -283,19 +267,9 @@ export default function Hero() {
       <section id="how-it-works" className="hero-section hero-how-section">
         <div className="hero-section-inner">
           <p className="hero-section-eyebrow">How it works</p>
-          <h2 className="hero-section-heading">Three steps from PDF to insight</h2>
-          <div className="hero-steps">
-            {steps.map((s, i) => (
-              <div className="hero-step" key={i}>
-                <div className="hero-step-number">{s.n}</div>
-                <div className="hero-step-body">
-                  <h3 className="hero-step-title">{s.title}</h3>
-                  <p className="hero-step-desc">{s.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <h2 className="hero-section-heading">From PDF to insight in four steps</h2>
         </div>
+        <HowItWorks />
       </section>
 
       {/* ── Section 4: FAQ ───────────────────────────────── */}
