@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, useTransform, useSpring, useMotionValue, useInView } from 'framer-motion'
 import { useLenis } from 'lenis/react'
-import { useNavigate } from 'react-router-dom'
 
 const IMG_W = 70
 const IMG_H = 95
@@ -73,13 +72,14 @@ export default function BookMorph() {
   const [size, setSize] = useState({ w: 1200, h: 700 })
   const [phase] = useState<Phase>('circle')
   const [morphReady, setMorphReady] = useState(false)
+  const [visible, setVisible] = useState(false)
   const lenis = useLenis()
-  const navigate = useNavigate()
 
   // ── Virtual scroll (mirrors original component's approach) ───────────────
   const virtualScroll = useMotionValue(0)
   const vRef          = useRef(0)
   const lockedRef     = useRef(false)
+  const doneRef       = useRef(false)
 
   // Morph: 0→600 maps circle→arc
   const morphProgress    = useTransform(virtualScroll, [0, 600], [0, 1])
@@ -155,12 +155,14 @@ export default function BookMorph() {
       const el = sectionRef.current
       if (!el) return
       const top = el.getBoundingClientRect().top
-      if (top <= -80) lock()
+      if (top <= -80 && vRef.current < V_MAX - 10) lock()
     }
     window.addEventListener('scroll', checkLock, { passive: true })
 
     const io = new IntersectionObserver(entries => {
-      if (entries[0].intersectionRatio < 0.1) unlock()
+      const ratio = entries[0].intersectionRatio
+      setVisible(ratio > 0 && !doneRef.current)
+      if (ratio < 0.1) unlock()
     }, { threshold: [0, 0.1] })
 
     if (sectionRef.current) io.observe(sectionRef.current)
@@ -172,7 +174,7 @@ export default function BookMorph() {
       if (next < -60) { unlock(); return }
       vRef.current = Math.max(0, Math.min(V_MAX, next))
       virtualScroll.set(vRef.current)
-      if (vRef.current >= V_MAX) unlock()
+      if (vRef.current >= V_MAX) { doneRef.current = true; unlock() }
     }
 
     let lastTY = 0
@@ -234,16 +236,17 @@ export default function BookMorph() {
           </motion.p>
         </div>
 
-        {/* Cards */}
-        {COVERS.slice(0, N).map((src, i) => {
+        {/* Cards — unmounted when section is off screen to avoid paint overhead */}
+        {visible && COVERS.slice(0, N).map((src, i) => {
           let pos: Pos = { x: 0, y: 0, rotation: 0, scale: 1, opacity: 1 }
 
           {
             // ── Circle ──────────────────────────────────────────────────
             const isMobile   = size.w < 768
             const minDim     = Math.min(size.w, size.h)
-            const circleR    = Math.min(minDim * 0.35, 350)
-            const circleOffsetY = isMobile ? 120 : 220
+            // Radius capped so the full circle fits within the section height
+            const circleR    = Math.min(minDim * 0.28, 230)
+            const circleOffsetY = isMobile ? 80 : 100
             const cAngle     = (i / N) * 360
             const cRad       = cAngle * Math.PI / 180
             const circlePos  = {
@@ -294,20 +297,17 @@ export default function BookMorph() {
           scroll to explore
         </motion.p>
 
-        {/* CTA — fades in when books have fully scrolled off */}
-        <motion.div
-          className="bm-end-cta"
-          animate={{ opacity: rotateValue > 300 ? 1 : 0, y: rotateValue > 300 ? 0 : 20 }}
-          transition={{ duration: 0.7 }}
-        >
-          <p className="bm-end-cta-label">Ready to start reading differently?</p>
-          <button className="bm-end-cta-btn" onClick={() => navigate('/library')}>
-            Upload your library
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </button>
-        </motion.div>
+        {/* Text — fades in when books have fully scrolled off */}
+        <div className="bm-end-cta-anchor">
+          <motion.p
+            className="bm-end-text"
+            animate={{ opacity: rotateValue > 300 ? 1 : 0, y: rotateValue > 300 ? 0 : 16 }}
+            transition={{ duration: 0.8 }}
+          >
+            Upload any book<br></br>novels, textbooks, academic papers, research.<br />
+            <span className="bm-end-text-em">Your entire library, all in one place.</span>
+          </motion.p>
+        </div>
       </div>
     </div>
   )
