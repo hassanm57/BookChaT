@@ -1199,8 +1199,8 @@ a { text-decoration: none; color: inherit; }
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 60px 48px 96px;
-  min-height: 100vh;
+  padding: 60px 48px 48px;
+  min-height: 90vh;
   width: 100%;
   overflow: hidden;
 }
@@ -2957,4 +2957,120 @@ a { text-decoration: none; color: inherit; }
   .pricing-card {
     padding: 36px 28px 40px;
   }
+}
+
+/* ─── BookMorph ─────────────────────────────────────────────── */
+.bm-section {
+  height: 112vh;
+  width: 100%;
+  background: var(--bg);
+  overflow: hidden;
+  position: relative;
+}
+
+.bm-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bm-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 9px;
+  overflow: hidden;
+  backface-visibility: hidden;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.bm-front {
+  background: #c8bdb0;
+}
+
+.bm-back {
+  background: #1C1C1C;
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.bm-fallback {
+  width: 100%;
+  height: 100%;
+}
+
+.bm-back-label {
+  font-family: var(--font-ui);
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #D94F3D;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.bm-hint {
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.bm-text-block {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+  z-index: 2;
+  width: min(600px, 90vw);
+}
+
+.bm-text-eyebrow {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.bm-text-heading {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.bm-text-italic {
+  font-style: italic;
+}
+
+.bm-text-sub {
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  max-width: 440px;
 }

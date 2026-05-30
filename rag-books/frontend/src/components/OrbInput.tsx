@@ -1,12 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 const PLACEHOLDERS = [
-  'What does the green light symbolize?',
-  'Summarize the ending of 1984...',
-  'Who is the narrator in Gatsby?',
-  'Find every mention of Daisy Buchanan...',
-  'What themes run through Crime and Punishment?',
-  'Explain the significance of the conch shell...',
+  'Can you summarize Chapter 4 of Sapiens?',
+  'What does the green light symbolize in Gatsby?',
+  'Why did Winston betray Julia in 1984?',
+  'Find every time Raskolnikov justifies the murder...',
+  'What is the significance of the conch shell?',
+  'Explain the ending of The Trial — did Josef K. deserve it?',
+  'How does Fitzgerald use colour to signal wealth?',
+  'What were Atticus Finch\'s closing arguments?',
+  'Compare how loneliness is portrayed in Of Mice and Men...',
+  'Which chapter introduces the concept of doublethink?',
+  'What drives Ahab\'s obsession with the whale?',
+  'Give me a quote about ambition from Macbeth.',
+  'How does Orwell foreshadow the ending in the first chapter?',
+  'What does the conch represent when it shatters?',
+  'Summarise the relationship between Lennie and George...',
+  'Who are the three witches and what do they represent?',
+  'Find the passage where Daisy cries over Gatsby\'s shirts.',
+  'What does Meursault feel at his mother\'s funeral?',
+  'Explain the allegory in Animal Farm in one paragraph.',
+  'Which page does Holden first mention the red hunting hat?',
 ]
 
 const CHAR_DELAY = 55

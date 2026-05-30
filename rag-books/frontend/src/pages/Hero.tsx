@@ -10,6 +10,7 @@ import OrbInput from '../components/OrbInput'
 import ScrollUI from '../components/ScrollUI'
 import FaqPhone from '../components/FaqPhone'
 import { ScatterReveal } from '../components/ScatterReveal'
+import BookMorph from '../components/BookMorph'
 
 const ASCII_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:!?"\'—§¶*#@'
 
@@ -191,6 +192,9 @@ export default function Hero() {
           </motion.button>
         </motion.div>
       </section>
+
+      {/* Section 1.2: Book morph */}
+      <BookMorph />
 
       {/* Section 1.5: Scroll animation */}
       <section className="hero-scroll-section">
