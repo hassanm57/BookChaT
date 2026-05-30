@@ -295,20 +295,24 @@ export default function BookMorph() {
           scroll to explore
         </motion.p>
 
-        {/* End-state block — fades in when books have fully scrolled off */}
-        <div className="bm-end-cta-anchor">
-          <motion.div
-            className="bm-end-block"
-            animate={{ opacity: rotateValue > 300 ? 1 : 0, y: rotateValue > 300 ? 0 : 30 }}
-            transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <p className="bm-end-text">
-              Upload any book: novels, textbooks, academic papers, research.<br />
-              <span className="bm-end-text-em">Your entire library, all in one place.</span>
-            </p>
-            <BookShelf />
-          </motion.div>
-        </div>
+        {/* Text — top of end-state */}
+        <motion.p
+          className="bm-end-text"
+          animate={{ opacity: rotateValue > 300 ? 1 : 0, y: rotateValue > 300 ? 0 : 20 }}
+          transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
+        >
+          Upload any book: novels, textbooks, academic papers, research.<br />
+          <span className="bm-end-text-em">Your entire library, all in one place.</span>
+        </motion.p>
+
+        {/* Bookshelf — anchored to bottom of section */}
+        <motion.div
+          className="bm-shelf-anchor"
+          animate={{ opacity: rotateValue > 300 ? 1 : 0, y: rotateValue > 300 ? 0 : 30 }}
+          transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+        >
+          <BookShelf />
+        </motion.div>
       </div>
     </div>
   )
