@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import NumberFlow from '@number-flow/react'
 import confetti from 'canvas-confetti'
@@ -39,124 +39,16 @@ const PLANS = [
   },
 ]
 
-interface Star {
-  x: number
-  y: number
-  r: number
-  vx: number
-  vy: number
-  opacity: number
-}
-
-function Starfield({ containerRef }: { containerRef: React.RefObject<HTMLDivElement | null> }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const starsRef = useRef<Star[]>([])
-  const mouseRef = useRef<{ x: number; y: number } | null>(null)
-  const rafRef = useRef<number>(0)
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    const container = containerRef.current
-    if (!canvas || !container) return
-
-    const ctx = canvas.getContext('2d')!
-    let W = 0, H = 0
-
-    const resize = () => {
-      const rect = container.getBoundingClientRect()
-      W = rect.width
-      H = rect.height
-      canvas.width = W
-      canvas.height = H
-    }
-    resize()
-
-    const COUNT = 120
-    starsRef.current = Array.from({ length: COUNT }, () => ({
-      x: Math.random() * W,
-      y: Math.random() * H,
-      r: Math.random() * 1.6 + 0.4,
-      vx: (Math.random() - 0.5) * 0.18,
-      vy: (Math.random() - 0.5) * 0.18,
-      opacity: Math.random() * 0.5 + 0.2,
-    }))
-
-    const tick = () => {
-      ctx.clearRect(0, 0, W, H)
-      const mouse = mouseRef.current
-      const stars = starsRef.current
-
-      for (const s of stars) {
-        if (mouse) {
-          const dx = mouse.x - s.x
-          const dy = mouse.y - s.y
-          const dist = Math.sqrt(dx * dx + dy * dy)
-          if (dist < 120) {
-            const force = (1 - dist / 120) * 0.4
-            s.vx -= (dx / dist) * force
-            s.vy -= (dy / dist) * force
-          }
-        }
-        s.vx *= 0.96
-        s.vy *= 0.96
-        s.x += s.vx
-        s.y += s.vy
-        if (s.x < 0) s.x = W
-        if (s.x > W) s.x = 0
-        if (s.y < 0) s.y = H
-        if (s.y > H) s.y = 0
-
-        ctx.beginPath()
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(255,255,255,${s.opacity})`
-        ctx.fill()
-      }
-      rafRef.current = requestAnimationFrame(tick)
-    }
-    tick()
-
-    const onMouseMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect()
-      mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top }
-    }
-    const onMouseLeave = () => { mouseRef.current = null }
-    container.addEventListener('mousemove', onMouseMove)
-    container.addEventListener('mouseleave', onMouseLeave)
-    window.addEventListener('resize', resize)
-
-    return () => {
-      cancelAnimationFrame(rafRef.current)
-      container.removeEventListener('mousemove', onMouseMove)
-      container.removeEventListener('mouseleave', onMouseLeave)
-      window.removeEventListener('resize', resize)
-    }
-  }, [containerRef])
-
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none',
-      }}
-    />
-  )
-}
-
 export default function Pricing() {
   const navigate = useNavigate()
   const [annual, setAnnual] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
 
   const fireConfetti = useCallback(() => {
     confetti({
-      particleCount: 80,
-      spread: 70,
-      origin: { y: 0.55 },
-      colors: ['#D94F3D', '#F0EBE3', '#1C1C1C', '#fff'],
+      particleCount: 90,
+      spread: 65,
+      origin: { y: 0.5 },
+      colors: ['#D94F3D', '#1C1C1C', '#ffffff', '#E8E2DA'],
     })
   }, [])
 
@@ -166,15 +58,17 @@ export default function Pricing() {
   }
 
   return (
-    <div className="pricing-wrapper" ref={containerRef}>
-      <Starfield containerRef={containerRef} />
+    <div className="pricing-wrapper">
 
       {/* Toggle */}
       <div className="pricing-toggle-row">
         <span className={`pricing-toggle-label ${!annual ? 'active' : ''}`}>Monthly</span>
         <button
           className="pricing-toggle-track"
-          style={{ background: annual ? '#D94F3D' : undefined, borderColor: annual ? '#D94F3D' : undefined }}
+          style={{
+            background: annual ? '#D94F3D' : '#d0c8be',
+            borderColor: annual ? '#D94F3D' : '#bfb6aa',
+          }}
           onClick={() => handleToggle(!annual)}
           aria-label="Toggle billing period"
         >
@@ -208,11 +102,10 @@ export default function Pricing() {
           <motion.div
             key={plan.id}
             className={`pricing-card ${plan.highlighted ? 'pricing-card--hi' : ''}`}
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '0px 0px -80px 0px' }}
-            transition={{ duration: 0.6, delay: i * 0.12, ease: [0.25, 0.46, 0.45, 0.94] }}
-            whileHover={{ y: -6 }}
+            initial={{ opacity: 0, y: 36 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: i * 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+            whileHover={{ y: -6, transition: { duration: 0.2 } }}
           >
             {plan.highlighted && (
               <div className="pricing-badge">Most Popular</div>
@@ -231,16 +124,21 @@ export default function Pricing() {
               <span className="pricing-per-mo">/mo</span>
             </div>
 
-            {annual && (
-              <motion.p
-                className="pricing-billed-annual"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                Billed ${(plan.annualPrice * 12).toFixed(2)}/year
-              </motion.p>
-            )}
+            <AnimatePresence>
+              {annual && (
+                <motion.p
+                  className="pricing-billed-annual"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  Billed ${(plan.annualPrice * 12).toFixed(2)}/year
+                </motion.p>
+              )}
+            </AnimatePresence>
+
+            <div className="pricing-divider" />
 
             <ul className="pricing-features">
               {plan.features.map(f => (
@@ -256,10 +154,15 @@ export default function Pricing() {
               onClick={() => navigate('/library')}
             >
               {plan.cta}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
             </button>
           </motion.div>
         ))}
       </div>
+
+      <p className="pricing-footnote">No credit card required · Cancel anytime</p>
     </div>
   )
 }
