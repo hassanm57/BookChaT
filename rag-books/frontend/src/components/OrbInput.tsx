@@ -3,13 +3,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 const PLACEHOLDERS = [
   'Can you summarize Chapter 4 of Sapiens?',
   'What does the green light symbolize in Gatsby?',
-  'Why did Winston betray Julia in 1984?',
-  'Find every time Raskolnikov justifies the murder...',
-  'What is the significance of the conch shell?',
-  'Explain the ending of The Trial — did Josef K. deserve it?',
-  'How does Fitzgerald use colour to signal wealth?',
-  'What were Atticus Finch\'s closing arguments?',
-  'Compare how loneliness is portrayed in Of Mice and Men...',
   'Which chapter introduces the concept of doublethink?',
   'What drives Ahab\'s obsession with the whale?',
   'Give me a quote about ambition from Macbeth.',
@@ -21,6 +14,12 @@ const PLACEHOLDERS = [
   'What does Meursault feel at his mother\'s funeral?',
   'Explain the allegory in Animal Farm in one paragraph.',
   'Which page does Holden first mention the red hunting hat?',
+  'Find every time Raskolnikov justifies the murder...',
+  'What is the significance of the conch shell?',
+  'Explain the ending of The Trial — did Josef K. deserve it?',
+  'How does Fitzgerald use colour to signal wealth?',
+  'What were Atticus Finch\'s closing arguments?',
+  'Compare how loneliness is portrayed in Of Mice and Men...',
 ]
 
 const CHAR_DELAY = 55
