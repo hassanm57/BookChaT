@@ -32,31 +32,53 @@ function UploadIcon() {
 }
 
 // ─── Upload Modal ─────────────────────────────────────────────────────────────
+type UploadPhase = 'pick' | 'loading' | 'confirm'
+
 function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded: (book: Book) => void }) {
   const [file, setFile] = useState<File | null>(null)
+  const [phase, setPhase] = useState<UploadPhase>('pick')
+  const [progress, setProgress] = useState(0)
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
   const [genre, setGenre] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [extracting, setExtracting] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [dragOver, setDragOver] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const animTimer = useRef<number>()
+  const doneTimer = useRef<number>()
+
+  useEffect(() => () => {
+    clearTimeout(animTimer.current)
+    clearTimeout(doneTimer.current)
+  }, [])
 
   const handleFile = async (f: File) => {
     if (!f.name.endsWith('.pdf')) { setError('Only PDF files are supported.'); return }
+    clearTimeout(animTimer.current)
+    clearTimeout(doneTimer.current)
+
     setFile(f)
     setError('')
-    setExtracting(true)
+    setTitle('')
+    setAuthor('')
+    setProgress(0)
+    setPhase('loading')
+
+    // Delay one tick so the bar renders at 0% before the CSS transition kicks in
+    animTimer.current = window.setTimeout(() => setProgress(75), 20)
+
     try {
       const meta = await extractMetadata(f)
       if (meta.title) setTitle(meta.title)
       if (meta.author) setAuthor(meta.author)
     } catch {
       setTitle(f.name.replace(/\.pdf$/i, '').replace(/[-_]/g, ' '))
-    } finally {
-      setExtracting(false)
     }
+
+    clearTimeout(animTimer.current)
+    setProgress(100)
+    doneTimer.current = window.setTimeout(() => setPhase('confirm'), 380)
   }
 
   const handleDrop = (e: React.DragEvent) => {
@@ -72,7 +94,7 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
     if (!title.trim()) { setError('Title is required.'); return }
     if (!author.trim()) { setError('Author is required.'); return }
     if (!genre) { setError('Please choose a genre.'); return }
-    setLoading(true)
+    setUploading(true)
     setError('')
     try {
       const book = await uploadBook(file, title.trim(), author.trim(), genre)
@@ -80,7 +102,7 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
       onClose()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Upload failed.')
-      setLoading(false)
+      setUploading(false)
     }
   }
 
@@ -99,6 +121,7 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
         exit={{ opacity: 0, y: 16, scale: 0.97 }}
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
         onClick={e => e.stopPropagation()}
+        layout
       >
         <div className="upload-modal-header">
           <h2 className="upload-modal-title">Add a book</h2>
@@ -110,8 +133,9 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
         </div>
 
         <form onSubmit={handleSubmit}>
+          {/* ── Drop zone ── */}
           <div
-            className={`upload-drop${dragOver ? ' upload-drop--over' : ''}${file ? ' upload-drop--filled' : ''}`}
+            className={`upload-drop${dragOver ? ' upload-drop--over' : ''}${file ? ' upload-drop--filled upload-drop--compact' : ''}`}
             onDragOver={e => { e.preventDefault(); setDragOver(true) }}
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
@@ -126,74 +150,93 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
             />
             {file ? (
               <>
-                <div className="upload-drop-icon upload-drop-icon--ok">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <div className="upload-drop-icon upload-drop-icon--ok upload-drop-icon--sm">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
                 </div>
-                <p className="upload-drop-name">{file.name}</p>
-                <p className="upload-drop-hint">Click to change</p>
+                <div className="upload-drop-compact-info">
+                  <p className="upload-drop-name">{file.name}</p>
+                  <p className="upload-drop-hint">Click to change file</p>
+                </div>
               </>
             ) : (
               <>
-                <div className="upload-drop-icon">
-                  <UploadIcon />
-                </div>
+                <div className="upload-drop-icon"><UploadIcon /></div>
                 <p className="upload-drop-label">Drop PDF here or <span>browse</span></p>
                 <p className="upload-drop-hint">PDF files only</p>
               </>
             )}
           </div>
 
-          <div className="upload-fields">
-            <div className="upload-field">
-              <label className="upload-label">
-                Title
-                {extracting && <span className="upload-extracting">reading PDF…</span>}
-              </label>
-              <input
-                className={`upload-input${extracting ? ' upload-input--extracting' : ''}`}
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                placeholder={extracting ? '' : 'Book title'}
-                disabled={extracting}
-                required
-              />
+          {/* ── Progress bar (loading phase) ── */}
+          {phase === 'loading' && (
+            <div className="upload-progress-wrap">
+              <div className="upload-progress">
+                <div
+                  className="upload-progress-fill"
+                  style={{
+                    width: `${progress}%`,
+                    transition: progress >= 100
+                      ? 'width 0.25s ease'
+                      : 'width 1.8s cubic-bezier(0.05, 0.85, 0.1, 1)',
+                  }}
+                />
+              </div>
+              <p className="upload-progress-reading">Reading your PDF…</p>
             </div>
-            <div className="upload-field">
-              <label className="upload-label">
-                Author
-                {extracting && <span className="upload-extracting">reading PDF…</span>}
-              </label>
-              <input
-                className={`upload-input${extracting ? ' upload-input--extracting' : ''}`}
-                value={author}
-                onChange={e => setAuthor(e.target.value)}
-                placeholder={extracting ? '' : 'Author name'}
-                disabled={extracting}
-                required
-              />
-            </div>
-            <div className="upload-field">
-              <label className="upload-label">Genre</label>
-              <select
-                className={`upload-input upload-select${!genre ? ' upload-select--placeholder' : ''}`}
-                value={genre}
-                onChange={e => setGenre(e.target.value)}
-              >
-                <option value="" disabled>Choose a genre</option>
-                {GENRES.map(g => <option key={g}>{g}</option>)}
-              </select>
-            </div>
-          </div>
+          )}
+
+          {/* ── Fields (confirm phase) ── */}
+          {phase === 'confirm' && (
+            <motion.div
+              className="upload-fields"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <div className="upload-field">
+                <label className="upload-label">Title</label>
+                <input
+                  className="upload-input"
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                  placeholder="Book title"
+                  autoFocus
+                  required
+                />
+              </div>
+              <div className="upload-field">
+                <label className="upload-label">Author</label>
+                <input
+                  className="upload-input"
+                  value={author}
+                  onChange={e => setAuthor(e.target.value)}
+                  placeholder="Author name"
+                  required
+                />
+              </div>
+              <div className="upload-field">
+                <label className="upload-label">Genre</label>
+                <select
+                  className={`upload-input upload-select${!genre ? ' upload-select--placeholder' : ''}`}
+                  value={genre}
+                  onChange={e => setGenre(e.target.value)}
+                >
+                  <option value="" disabled>Choose a genre</option>
+                  {GENRES.map(g => <option key={g}>{g}</option>)}
+                </select>
+              </div>
+            </motion.div>
+          )}
 
           {error && <p className="upload-error">{error}</p>}
 
-          <button className="upload-submit" type="submit" disabled={loading || extracting}>
-            {loading
-              ? <><span className="auth-spinner" /> Uploading...</>
-              : 'Upload'}
-          </button>
+          {phase === 'confirm' && (
+            <button className="upload-submit" type="submit" disabled={uploading}>
+              {uploading ? <><span className="auth-spinner" /> Uploading…</> : 'Upload'}
+            </button>
+          )}
         </form>
       </motion.div>
     </motion.div>

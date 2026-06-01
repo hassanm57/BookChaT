@@ -258,7 +258,9 @@ export default function ChatPanel({ bookId, bookTitle, bookAuthor, bookGenre, on
 
         {messages.map((msg, i) => (
           <div key={i} className={`msg-wrap ${msg.role}`}>
-            {msg.role === 'assistant' && <div className="msg-avatar">AI</div>}
+            {msg.role === 'assistant' && (
+              <img src="/logo.png" alt="Folio" className="msg-avatar-img" />
+            )}
             <div className={`msg-bubble msg-${msg.role}`}>
               {msg.content || (streaming && i === messages.length - 1
                 ? <span className="typing-dots"><span /><span /><span /></span>
@@ -267,16 +269,18 @@ export default function ChatPanel({ bookId, bookTitle, bookAuthor, bookGenre, on
 
               {msg.citations && msg.citations.length > 0 && (
                 <div className="citation-chips">
-                  {msg.citations.map((c, j) => (
-                    <button
-                      key={j}
-                      className="citation-chip"
-                      onClick={() => onCitationClick(c.page_number)}
-                      title={c.text}
-                    >
-                      p.{c.page_number}
-                    </button>
-                  ))}
+                  {[...msg.citations]
+                    .sort((a, b) => a.page_number - b.page_number)
+                    .map((c, j) => (
+                      <button
+                        key={j}
+                        className="citation-chip"
+                        onClick={() => onCitationClick(c.page_number)}
+                        title={c.text}
+                      >
+                        p.{c.page_number}
+                      </button>
+                    ))}
                 </div>
               )}
 

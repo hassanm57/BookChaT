@@ -12,10 +12,36 @@ const BackIcon = () => (
 )
 
 const PdfIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
-    <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+    <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
   </svg>
+)
+
+const GlassFilter = () => (
+  <svg style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} aria-hidden>
+    <defs>
+      <filter id="folio-liquid-glass" x="0%" y="0%" width="100%" height="100%" colorInterpolationFilters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.05 0.05" numOctaves="1" seed="1" result="turbulence"/>
+        <feGaussianBlur in="turbulence" stdDeviation="2" result="blurredNoise"/>
+        <feDisplacementMap in="SourceGraphic" in2="blurredNoise" scale="70" xChannelSelector="R" yChannelSelector="B" result="displaced"/>
+        <feGaussianBlur in="displaced" stdDeviation="4" result="finalBlur"/>
+        <feComposite in="finalBlur" in2="finalBlur" operator="over"/>
+      </filter>
+    </defs>
+  </svg>
+)
+
+const PdfToggle = ({ active, onClick }: { active: boolean; onClick: () => void }) => (
+  <button className={`lpdf-btn${active ? ' active' : ''}`} onClick={onClick} title={active ? 'Hide PDF' : 'View PDF'}>
+    <div className="lpdf-shadow" />
+    <div className="lpdf-glass" style={{ backdropFilter: 'url("#folio-liquid-glass")' }} />
+    <span className="lpdf-label">
+      <PdfIcon />
+      {active ? 'Hide PDF' : 'View PDF'}
+    </span>
+    <GlassFilter />
+  </button>
 )
 
 export default function Chat() {
@@ -57,13 +83,7 @@ export default function Chat() {
         <span className="topbar-title">{book.title}</span>
         <span className="topbar-author">by {book.author}</span>
         <div className="topbar-spacer" />
-        <button
-          className={`pdf-toggle-btn ${showPdf ? 'active' : ''}`}
-          onClick={() => setShowPdf(v => !v)}
-        >
-          <PdfIcon />
-          {showPdf ? 'Hide PDF' : 'View PDF'}
-        </button>
+        <PdfToggle active={showPdf} onClick={() => setShowPdf(v => !v)} />
       </div>
 
       <div className="chat-body">
