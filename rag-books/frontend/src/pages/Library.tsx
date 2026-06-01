@@ -243,6 +243,84 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
   )
 }
 
+// ─── Library Skeleton ─────────────────────────────────────────────────────────
+function LibrarySkeleton() {
+  // Each row of skeletons gets a slight animation-delay offset for a stagger effect
+  const d = (ms: number): React.CSSProperties => ({ animationDelay: `${ms}ms` })
+
+  return (
+    <div className="lib-page">
+      {/* Nav */}
+      <nav className="lib-nav">
+        <div className="lib-nav-logo">
+          <div className="skel" style={{ width: 28, height: 28, borderRadius: 6 }} />
+          <div className="skel" style={{ width: 52, height: 14, borderRadius: 4, ...d(60) }} />
+        </div>
+        <div className="lib-nav-center">
+          <div className="skel" style={{ width: 148, height: 13, borderRadius: 4, ...d(80) }} />
+        </div>
+        <div className="lib-nav-actions">
+          <div className="skel" style={{ width: 36, height: 36, borderRadius: '50%', ...d(100) }} />
+          <div className="skel" style={{ width: 36, height: 36, borderRadius: '50%', ...d(140) }} />
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <section className="lib-hero">
+        {/* Left: text column */}
+        <div className="lib-hero-text" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="skel" style={{ width: 88, height: 11, ...d(0) }} />
+          <div className="skel" style={{ width: '72%', height: 44, borderRadius: 8, ...d(60) }} />
+          <div className="skel" style={{ width: '52%', height: 44, borderRadius: 8, ...d(100) }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}>
+            <div className="skel" style={{ width: '80%', height: 13, ...d(160) }} />
+            <div className="skel" style={{ width: '62%', height: 13, ...d(200) }} />
+          </div>
+          <div className="skel" style={{ width: 152, height: 46, borderRadius: 40, marginTop: 8, ...d(240) }} />
+        </div>
+
+        {/* Right: featured panel */}
+        <div className="lib-feat" style={{ overflow: 'hidden' }}>
+          <div className="lib-feat-inner">
+            <div className="skel" style={{ width: 148, flexShrink: 0, aspectRatio: '2/3', borderRadius: 10, ...d(80) }} />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div className="skel" style={{ width: 56, height: 10, ...d(120) }} />
+              <div className="skel" style={{ width: '88%', height: 20, borderRadius: 6, ...d(160) }} />
+              <div className="skel" style={{ width: '62%', height: 12, ...d(200) }} />
+              <div className="skel" style={{ width: 112, height: 40, borderRadius: 40, marginTop: 8, ...d(240) }} />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Collection */}
+      <section className="lib-collection">
+        <div className="lib-collection-header">
+          <div className="lib-collection-title">
+            <div className="skel" style={{ width: 128, height: 22, borderRadius: 6, ...d(0) }} />
+            <div className="skel" style={{ width: 34, height: 24, borderRadius: 20, ...d(60) }} />
+          </div>
+        </div>
+
+        <div className="lib-grid">
+          {[0, 1, 2, 3, 4].map(i => (
+            <div key={i}>
+              <div
+                className="skel lib-card-cover"
+                style={{ ...d(i * 70) }}
+              />
+              <div className="lib-card-info">
+                <div className="skel" style={{ width: '82%', height: 12, ...d(i * 70 + 50) }} />
+                <div className="skel" style={{ width: '56%', height: 11, marginTop: 5, ...d(i * 70 + 90) }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  )
+}
+
 // ─── Empty State ──────────────────────────────────────────────────────────────
 function EmptyState({ onUpload }: { onUpload: () => void }) {
   return (
@@ -377,13 +455,7 @@ export default function Library() {
 
   const initials = user?.email?.slice(0, 2).toUpperCase() ?? 'U'
 
-  if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="spinner" />
-      </div>
-    )
-  }
+  if (loading) return <LibrarySkeleton />
 
   return (
     <div className="lib-page">

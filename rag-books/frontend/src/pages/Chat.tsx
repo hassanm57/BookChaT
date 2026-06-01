@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { fetchBook, fetchPdfUrl } from '../api'
 import type { Book } from '../types'
 import ChatPanel from '../components/ChatPanel'
@@ -17,6 +18,81 @@ const PdfIcon = () => (
     <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
   </svg>
 )
+
+// ─── Chat Skeleton ─────────────────────────────────────────────────────────────
+function ChatSkeleton() {
+  const d = (ms: number): React.CSSProperties => ({ animationDelay: `${ms}ms` })
+
+  return (
+    <div className="chat-layout">
+      {/* Topbar */}
+      <div className="chat-topbar">
+        <div className="skel" style={{ width: 68, height: 12, borderRadius: 4, ...d(0) }} />
+        <div style={{ width: 1, height: 20, background: 'var(--border)', flexShrink: 0 }} />
+        <div className="skel" style={{ width: 160, height: 14, borderRadius: 4, ...d(60) }} />
+        <div className="skel" style={{ width: 90, height: 11, borderRadius: 4, ...d(100) }} />
+        <div style={{ flex: 1 }} />
+        <div className="skel" style={{ width: 104, height: 34, borderRadius: 9999, ...d(120) }} />
+      </div>
+
+      {/* Body */}
+      <div className="chat-body">
+        {/* PDF pane — dark area with simulated page blocks */}
+        <div className="pdf-pane">
+          <div className="pdf-controls" style={{ background: '#3a3a3a' }}>
+            <div className="skel-dark" style={{ width: 30, height: 30 }} />
+            <div className="skel-dark" style={{ width: 60, height: 12, borderRadius: 4, ...d(40) }} />
+            <div className="skel-dark" style={{ width: 30, height: 30, ...d(80) }} />
+          </div>
+          <div className="skel-pdf-inner">
+            {/* Simulated PDF page */}
+            <div className="skel-dark" style={{ width: '100%', height: 48, borderRadius: 4, ...d(0) }} />
+            <div className="skel-dark" style={{ width: '88%', height: 12, borderRadius: 3, ...d(50) }} />
+            <div className="skel-dark" style={{ width: '92%', height: 12, borderRadius: 3, ...d(80) }} />
+            <div className="skel-dark" style={{ width: '85%', height: 12, borderRadius: 3, ...d(110) }} />
+            <div className="skel-dark" style={{ width: '90%', height: 12, borderRadius: 3, ...d(140) }} />
+            <div className="skel-dark" style={{ width: '78%', height: 12, borderRadius: 3, ...d(170) }} />
+            <div style={{ height: 8 }} />
+            <div className="skel-dark" style={{ width: '93%', height: 12, borderRadius: 3, ...d(220) }} />
+            <div className="skel-dark" style={{ width: '87%', height: 12, borderRadius: 3, ...d(250) }} />
+            <div className="skel-dark" style={{ width: '91%', height: 12, borderRadius: 3, ...d(280) }} />
+            <div className="skel-dark" style={{ width: '72%', height: 12, borderRadius: 3, ...d(310) }} />
+            <div style={{ height: 8 }} />
+            <div className="skel-dark" style={{ width: '88%', height: 12, borderRadius: 3, ...d(360) }} />
+            <div className="skel-dark" style={{ width: '94%', height: 12, borderRadius: 3, ...d(390) }} />
+            <div className="skel-dark" style={{ width: '80%', height: 12, borderRadius: 3, ...d(420) }} />
+          </div>
+        </div>
+
+        {/* Chat pane */}
+        <div className="chat-pane">
+          {/* Welcome area */}
+          <div className="skel-chat-welcome-area">
+            <div className="skel" style={{ width: 52, height: 52, borderRadius: 14, ...d(40) }} />
+            <div className="skel" style={{ width: 210, height: 22, borderRadius: 6, ...d(80) }} />
+            <div className="skel" style={{ width: 130, height: 13, borderRadius: 4, ...d(120) }} />
+          </div>
+
+          {/* Input area */}
+          <div className="chat-input-area">
+            <div className="skel-suggestion-row">
+              {([130, 160, 145, 108] as number[]).map((w, i) => (
+                <div key={i} className="skel" style={{ width: w, height: 30, borderRadius: 20, ...d(i * 55) }} />
+              ))}
+            </div>
+            <div className="chat-input-card" style={{ padding: 14 }}>
+              <div className="skel" style={{ width: '55%', height: 13, borderRadius: 4, ...d(60) }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 28 }}>
+                <div className="skel" style={{ width: 160, height: 10, borderRadius: 4, ...d(100) }} />
+                <div className="skel" style={{ width: 34, height: 34, borderRadius: '50%', ...d(120) }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const GlassFilter = () => (
   <svg style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} aria-hidden>
@@ -63,17 +139,15 @@ export default function Chat() {
     setShowPdf(true)
   }
 
-  if (!book) {
-    return (
-      <div className="loading-screen">
-        <div className="spinner" />
-        Loading...
-      </div>
-    )
-  }
+  if (!book) return <ChatSkeleton />
 
   return (
-    <div className="chat-layout">
+    <motion.div
+      className="chat-layout"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+    >
       <div className="chat-topbar">
         <button className="topbar-back" onClick={() => navigate('/library')}>
           <BackIcon />
@@ -102,6 +176,6 @@ export default function Chat() {
           onCitationClick={handleCitationClick}
         />
       </div>
-    </div>
+    </motion.div>
   )
 }
