@@ -96,7 +96,11 @@ def _run_ingest(book_id: str, data: bytes, title: str, author: str, user_id: str
             cover_data: bytes | None = None
             if doc.page_count > 0:
                 pixmap = doc[0].get_pixmap(dpi=150)
-                cover_data = pixmap.tobytes("jpeg")
+                # Downscale to 400px wide to keep file size small
+                if pixmap.width > 400:
+                    scale = 400 / pixmap.width
+                    pixmap = doc[0].get_pixmap(matrix=fitz.Matrix(scale, scale))
+                cover_data = pixmap.tobytes("jpeg", jpg_quality=85)
             doc.close()
         finally:
             tmp_path.unlink(missing_ok=True)
@@ -108,7 +112,11 @@ def _run_ingest(book_id: str, data: bytes, title: str, author: str, user_id: str
         cover_url: str | None = None
         if cover_data:
             cover_path = f"{user_id}/{book_id}_cover.jpg"
-            sb.storage.from_("covers").upload(cover_path, cover_data, {"content-type": "image/jpeg"})
+            sb.storage.from_("covers").upload(
+                cover_path,
+                cover_data,
+                {"content-type": "image/jpeg", "cache-control": "86400"},
+            )
             cover_url = f"{os.environ['SUPABASE_URL']}/storage/v1/object/public/covers/{cover_path}"
 
         update: dict = {"status": "ready"}

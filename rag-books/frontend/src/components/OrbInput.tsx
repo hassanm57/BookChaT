@@ -22,14 +22,17 @@ const PLACEHOLDERS = [
   'Compare how loneliness is portrayed in Of Mice and Men...',
 ]
 
-const CHAR_DELAY = 55
-const IDLE_DELAY = 2000
+const CHAR_DELAY = 55   // ms per character typed
+const ERASE_DELAY = 28  // ms per character erased (faster = more natural)
+const IDLE_DELAY = 1800 // ms to hold after typing completes
+
+type Phase = 'typing' | 'idle' | 'erasing'
 
 export default function OrbInput() {
   const [focused] = useState(false)
   const [placeholderIndex, setPlaceholderIndex] = useState(0)
   const [displayed, setDisplayed] = useState('')
-  const [typing, setTyping] = useState(true)
+  const [phase, setPhase] = useState<Phase>('typing')
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -42,9 +45,10 @@ export default function OrbInput() {
     const current = placeholders[placeholderIndex]
     const chars = Array.from(current)
     setDisplayed('')
-    setTyping(true)
+    setPhase('typing')
     let i = 0
 
+    // Phase 1: type character by character
     intervalRef.current = setInterval(() => {
       if (i < chars.length) {
         setDisplayed(chars.slice(0, i + 1).join(''))
@@ -52,9 +56,24 @@ export default function OrbInput() {
       } else {
         clearInterval(intervalRef.current!)
         intervalRef.current = null
-        setTyping(false)
+        setPhase('idle')
+
+        // Phase 2: hold, then start erasing
         timeoutRef.current = setTimeout(() => {
-          setPlaceholderIndex(p => (p + 1) % placeholders.length)
+          setPhase('erasing')
+          let len = chars.length
+
+          // Phase 3: erase character by character
+          intervalRef.current = setInterval(() => {
+            if (len > 0) {
+              len--
+              setDisplayed(chars.slice(0, len).join(''))
+            } else {
+              clearInterval(intervalRef.current!)
+              intervalRef.current = null
+              setPlaceholderIndex(p => (p + 1) % placeholders.length)
+            }
+          }, ERASE_DELAY)
         }, IDLE_DELAY)
       }
     }, CHAR_DELAY)
@@ -64,6 +83,9 @@ export default function OrbInput() {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
   }, [placeholderIndex, placeholders])
+
+  // Show cursor while actively typing or erasing; hide during idle pause
+  const showCursor = phase === 'typing' || phase === 'erasing'
 
   return (
     <div className={`orb-input-wrap ${focused ? 'orb-input-wrap--focused' : ''}`}>
@@ -80,7 +102,7 @@ export default function OrbInput() {
         type="text"
         readOnly
         tabIndex={-1}
-        placeholder={`${displayed}${typing ? '|' : ''}`}
+        placeholder={`${displayed}${showCursor ? '|' : ''}`}
         aria-hidden="true"
         className="orb-input"
       />

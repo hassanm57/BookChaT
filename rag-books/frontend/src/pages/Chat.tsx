@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { fetchBook, fetchPdfUrl } from '../api'
 import type { Book } from '../types'
 import ChatPanel from '../components/ChatPanel'
-import PdfViewer from '../components/PdfViewer'
+import PdfViewer, { type PdfViewerHandle } from '../components/PdfViewer'
 
 const BackIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -129,7 +129,7 @@ export default function Chat() {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [pdfUrlReady, setPdfUrlReady] = useState(false)
   const [showPdf, setShowPdf] = useState(true)
-  const [pdfPage, setPdfPage] = useState(1)
+  const pdfViewerRef = useRef<PdfViewerHandle>(null)
 
   useEffect(() => {
     if (!bookId) return
@@ -143,8 +143,9 @@ export default function Chat() {
   }, [bookId, navigate])
 
   const handleCitationClick = (page: number) => {
-    setPdfPage(page)
     setShowPdf(true)
+    // Small delay so the PDF pane mounts before we try to scroll
+    setTimeout(() => pdfViewerRef.current?.jumpToPage(page), 50)
   }
 
   if (!book || !pdfUrlReady) return <ChatSkeleton />
@@ -171,9 +172,8 @@ export default function Chat() {
       <div className="chat-body">
         {showPdf && pdfUrl && (
           <PdfViewer
+            ref={pdfViewerRef}
             pdfUrl={pdfUrl}
-            page={pdfPage}
-            onPageChange={setPdfPage}
           />
         )}
         <ChatPanel

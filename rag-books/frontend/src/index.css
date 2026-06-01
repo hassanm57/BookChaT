@@ -764,75 +764,66 @@ a { text-decoration: none; color: inherit; }
 /* ─── PDF Viewer ─────────────────────────────────────────────────────────── */
 .pdf-pane {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   border-right: 1px solid var(--border);
+  background: #525659;
   overflow: hidden;
   min-width: 0;
 }
 
-.pdf-pane > div {
-  height: 100%;
+.pdf-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background: #3a3a3a;
+  flex-shrink: 0;
 }
 
-/* ── @react-pdf-viewer theme overrides ─────────────────────────────────── */
-.pdf-pane .rpv-core__viewer {
+.pdf-page-info {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.7);
+  min-width: 60px;
+  text-align: center;
   font-family: var(--font-sans);
 }
 
-/* Toolbar — match the app's dark topbar feel */
-.pdf-pane .rpv-toolbar {
-  background: #2e2e2e !important;
-  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
-}
-.pdf-pane .rpv-toolbar__item button,
-.pdf-pane .rpv-toolbar__item .rpv-core__minimal-button {
-  color: rgba(255,255,255,0.8) !important;
-  border-radius: 6px !important;
-}
-.pdf-pane .rpv-toolbar__item button:hover,
-.pdf-pane .rpv-toolbar__item .rpv-core__minimal-button:hover {
-  background: rgba(255,255,255,0.1) !important;
-  color: #fff !important;
-}
-.pdf-pane .rpv-core__minimal-button--selected {
-  background: rgba(255,255,255,0.15) !important;
+.pdf-scroll {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  gap: 12px;
 }
 
-/* Sidebar */
-.pdf-pane .rpv-default-layout__sidebar {
-  border-right: 1px solid rgba(255,255,255,0.08) !important;
-  background: #272727 !important;
-}
-.pdf-pane .rpv-default-layout__sidebar-tabs {
-  background: #2e2e2e !important;
-  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
-}
-.pdf-pane .rpv-default-layout__sidebar-tab--selected {
-  border-bottom-color: var(--accent) !important;
+.pdf-page-wrapper {
+  flex-shrink: 0;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  border-radius: 2px;
+  overflow: hidden;
 }
 
-/* Page background */
-.pdf-pane .rpv-core__inner-pages {
-  background: #525659 !important;
+.pdf-page-skeleton {
+  width: 520px;
+  background: #3a3a3a;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: 2px;
 }
 
-/* Page shadow */
-.pdf-pane .rpv-core__page-layer {
-  box-shadow: 0 4px 24px rgba(0,0,0,0.4) !important;
-}
-
-/* Input fields in toolbar (page number) */
-.pdf-pane .rpv-core__textbox {
-  background: rgba(255,255,255,0.1) !important;
-  border-color: rgba(255,255,255,0.2) !important;
-  color: rgba(255,255,255,0.9) !important;
-  border-radius: 4px !important;
-}
-
-/* Tooltip popups */
-.pdf-pane .rpv-core__tooltip-body {
-  background: #1a1a1a !important;
-  color: rgba(255,255,255,0.85) !important;
-  font-size: 0.75rem !important;
+.pdf-loading, .pdf-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.875rem;
+  font-family: var(--font-sans);
 }
 
 /* ─── Chat Panel ─────────────────────────────────────────────────────────── */
@@ -1473,12 +1464,12 @@ a { text-decoration: none; color: inherit; }
   display: flex;
   align-items: center;
   gap: 0;
-  padding: 10px 20px 10px 10px;
+  padding: 7px 20px 7px 7px;
   background: white;
   border: 1.5px solid rgba(28, 28, 28, 0.12);
   border-radius: 100px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05);
-  width: 540px;
+  width: 620px;
   max-width: 90vw;
   margin-bottom: 36px;
   transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
