@@ -62,7 +62,7 @@ async def generate(query: str, chunks: list[dict]) -> AsyncGenerator[str, None]:
 
     full_response = ""
     stream = await client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-5.4-mini",
         messages=messages,
         stream=True,
     )
@@ -86,7 +86,7 @@ async def generate(query: str, chunks: list[dict]) -> AsyncGenerator[str, None]:
     # Generate follow-up questions based on the actual answer
     try:
         follow_up_response = await client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-5.4-mini",
             messages=[
                 {"role": "user", "content": FOLLOW_UP_PROMPT.format(
                     query=query,

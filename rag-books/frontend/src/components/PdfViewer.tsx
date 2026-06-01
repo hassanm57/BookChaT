@@ -1,7 +1,15 @@
-import { useState, useCallback } from 'react'
-import { Document, Page } from 'react-pdf'
-import 'react-pdf/dist/Page/AnnotationLayer.css'
-import 'react-pdf/dist/Page/TextLayer.css'
+import { useEffect, useRef, useMemo } from 'react'
+import { Worker, Viewer } from '@react-pdf-viewer/core'
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout'
+import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation'
+import '@react-pdf-viewer/core/lib/styles/index.css'
+import '@react-pdf-viewer/default-layout/lib/styles/index.css'
+import type { PageChangeEvent } from '@react-pdf-viewer/core'
+
+const WORKER_URL = new URL(
+  'pdfjs-dist/build/pdf.worker.min.js',
+  import.meta.url,
+).toString()
 
 interface Props {
   pdfUrl: string
@@ -10,59 +18,30 @@ interface Props {
 }
 
 export default function PdfViewer({ pdfUrl, page, onPageChange }: Props) {
-  const [numPages, setNumPages] = useState<number>(0)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+  const pageNavPlugin = useMemo(() => pageNavigationPlugin(), [])
+  const defaultLayout = useMemo(() => defaultLayoutPlugin(), [])
+  const isFirstRender = useRef(true)
 
-  const onLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
-    setNumPages(numPages)
-    setLoading(false)
-  }, [])
-
-  const onLoadError = useCallback(() => {
-    setLoading(false)
-    setError(true)
-  }, [])
-
-  const safePage = Math.min(Math.max(1, page), numPages || 1)
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    pageNavPlugin.jumpToPage(page - 1)
+  }, [page])
 
   return (
     <div className="pdf-pane">
-      <div className="pdf-controls">
-        <button
-          className="pdf-nav-btn"
-          onClick={() => onPageChange(safePage - 1)}
-          disabled={safePage <= 1}
-        >←</button>
-        <span className="pdf-page-info">
-          {loading ? '...' : `${safePage} / ${numPages}`}
-        </span>
-        <button
-          className="pdf-nav-btn"
-          onClick={() => onPageChange(safePage + 1)}
-          disabled={safePage >= numPages}
-        >→</button>
-      </div>
-
-      <div className="pdf-scroll">
-        {error ? (
-          <div className="pdf-error">Could not load PDF</div>
-        ) : (
-          <Document
-            file={pdfUrl}
-            onLoadSuccess={onLoadSuccess}
-            onLoadError={onLoadError}
-            loading={<div className="pdf-loading"><div className="spinner" /></div>}
-          >
-            <Page
-              pageNumber={safePage}
-              width={520}
-              renderTextLayer={true}
-              renderAnnotationLayer={false}
-            />
-          </Document>
-        )}
-      </div>
+      <Worker workerUrl={WORKER_URL}>
+        <div style={{ height: '100%' }}>
+          <Viewer
+            fileUrl={pdfUrl}
+            plugins={[pageNavPlugin, defaultLayout]}
+            initialPage={page - 1}
+            onPageChange={(e: PageChangeEvent) => onPageChange(e.currentPage + 1)}
+          />
+        </div>
+      </Worker>
     </div>
   )
 }

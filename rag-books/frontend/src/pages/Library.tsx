@@ -557,7 +557,7 @@ export default function Library() {
               </p>
               <button
                 className="lib-hero-cta"
-                onClick={() => selected && selected.status !== 'processing' && navigate(`/chat/${selected.book_id}`)}
+                onClick={() => selected && selected.status !== 'processing' && navigate(`/chat/${selected.book_id}`, { state: { book: selected } })}
               >
                 Continue reading
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -573,7 +573,7 @@ export default function Library() {
             >
               <FeaturedPanel
                 book={selected}
-                onRead={() => selected && selected.status !== 'processing' && navigate(`/chat/${selected.book_id}`)}
+                onRead={() => selected && selected.status !== 'processing' && navigate(`/chat/${selected.book_id}`, { state: { book: selected } })}
               />
             </motion.div>
           </section>
@@ -610,7 +610,7 @@ export default function Library() {
                       book={book}
                       isSelected={book.book_id === selected?.book_id}
                       onHover={() => setSelectedIndex(books.indexOf(book) === -1 ? i : books.indexOf(book))}
-                      onClick={() => navigate(`/chat/${book.book_id}`)}
+                      onClick={() => navigate(`/chat/${book.book_id}`, { state: { book } })}
                     />
                   </motion.div>
                 ))}

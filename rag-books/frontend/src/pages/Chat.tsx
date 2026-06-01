@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { fetchBook, fetchPdfUrl } from '../api'
 import type { Book } from '../types'
@@ -123,15 +123,23 @@ const PdfToggle = ({ active, onClick }: { active: boolean; onClick: () => void }
 export default function Chat() {
   const { bookId } = useParams<{ bookId: string }>()
   const navigate = useNavigate()
-  const [book, setBook] = useState<Book | null>(null)
+  const location = useLocation()
+  const initialBook = useRef((location.state as { book?: Book } | null)?.book ?? null)
+  const [book, setBook] = useState<Book | null>(initialBook.current)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const [pdfUrlReady, setPdfUrlReady] = useState(false)
   const [showPdf, setShowPdf] = useState(true)
   const [pdfPage, setPdfPage] = useState(1)
 
   useEffect(() => {
     if (!bookId) return
-    fetchBook(bookId).then(setBook).catch(() => navigate('/library'))
-    fetchPdfUrl(bookId).then(setPdfUrl).catch(() => {})
+    if (!initialBook.current) {
+      fetchBook(bookId).then(setBook).catch(() => navigate('/library'))
+    }
+    fetchPdfUrl(bookId)
+      .then(setPdfUrl)
+      .catch(() => {})
+      .finally(() => setPdfUrlReady(true))
   }, [bookId, navigate])
 
   const handleCitationClick = (page: number) => {
@@ -139,7 +147,7 @@ export default function Chat() {
     setShowPdf(true)
   }
 
-  if (!book) return <ChatSkeleton />
+  if (!book || !pdfUrlReady) return <ChatSkeleton />
 
   return (
     <motion.div
