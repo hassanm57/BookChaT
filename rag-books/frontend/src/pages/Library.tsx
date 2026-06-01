@@ -7,6 +7,7 @@ import type { Book } from '../types'
 import BookCard from '../components/BookCard'
 import FeaturedPanel from '../components/FeaturedPanel'
 import OnboardingModal from '../components/OnboardingModal'
+import { ExpandingSearchDock } from '../components/ExpandingSearchDock'
 
 const containerVariants = {
   hidden: {},
@@ -19,13 +20,6 @@ const cardVariants = {
 
 const GENRES = ['Fiction', 'Non-Fiction', 'Science', 'History', 'Philosophy', 'Biography', 'Research', 'Other']
 
-function SearchIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/>
-    </svg>
-  )
-}
 
 function UploadIcon() {
   return (
@@ -242,7 +236,9 @@ export default function Library() {
   const [showUpload, setShowUpload] = useState(false)
   const [uploadKey, setUploadKey] = useState(0)
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
   const pollingRef = useRef<Map<string, number>>(new Map())
+  const menuRef = useRef<HTMLDivElement>(null)
 
   // Scroll fix
   useEffect(() => {
@@ -265,6 +261,17 @@ export default function Library() {
   useEffect(() => {
     const ref = pollingRef.current
     return () => { ref.forEach(id => window.clearInterval(id)) }
+  }, [])
+
+  // Close user dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
   }, [])
 
   const stopPolling = useCallback((bookId: string) => {
@@ -351,23 +358,63 @@ export default function Library() {
           <img src="/logo.png" alt="Folio" className="lib-nav-logo-img" />
           <span className="lib-nav-logo-text">Folio</span>
         </button>
+
         <div className="lib-nav-center">
-          <span className="lib-nav-tag">My Library</span>
+          <motion.div
+            className="lib-nav-breadcrumb"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            <span className="lib-breadcrumb-root" onClick={() => navigate('/')}>Folio</span>
+            <span className="lib-breadcrumb-sep">›</span>
+            <span className="lib-breadcrumb-current">Library</span>
+          </motion.div>
         </div>
+
         <div className="lib-nav-actions">
-          <button className="lib-upload-btn" onClick={openUpload}>
+          <button className="lib-upload-btn" onClick={openUpload} title="Upload PDF">
             <UploadIcon />
-            Upload PDF
           </button>
-          <div className="lib-user-menu">
-            <div className="lib-user-avatar" title={user?.email}>{initials}</div>
-            <button className="lib-signout-btn" onClick={signOut} title="Sign out">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
+
+          <div className="lib-user-menu" ref={menuRef}>
+            <button
+              className={`lib-user-avatar${showUserMenu ? ' lib-user-avatar--open' : ''}`}
+              onClick={() => setShowUserMenu(v => !v)}
+            >
+              {initials}
             </button>
+            <AnimatePresence>
+              {showUserMenu && (
+                <motion.div
+                  className="lib-user-dropdown"
+                  initial={{ opacity: 0, scale: 0.94, y: -6 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.94, y: -6 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <div className="lib-dropdown-header">
+                    <div className="lib-dropdown-avatar">{initials}</div>
+                    <div className="lib-dropdown-info">
+                      <div className="lib-dropdown-name">{user?.email?.split('@')[0]}</div>
+                      <div className="lib-dropdown-email">{user?.email}</div>
+                    </div>
+                  </div>
+                  <div className="lib-dropdown-divider" />
+                  <button
+                    className="lib-dropdown-signout"
+                    onClick={() => { setShowUserMenu(false); signOut() }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                      <polyline points="16 17 21 12 16 7"/>
+                      <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Sign out
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </nav>
@@ -411,8 +458,6 @@ export default function Library() {
             >
               <FeaturedPanel
                 book={selected}
-                onPrev={() => setSelectedIndex(i => (i - 1 + books.length) % books.length)}
-                onNext={() => setSelectedIndex(i => (i + 1) % books.length)}
                 onRead={() => selected && selected.status !== 'processing' && navigate(`/chat/${selected.book_id}`)}
               />
             </motion.div>
@@ -425,18 +470,17 @@ export default function Library() {
                 <h2 className="lib-collection-heading">Your Books</h2>
                 <span className="lib-collection-count">{filteredBooks.length}</span>
               </div>
-              <div className="lib-search-wrap">
-                <SearchIcon />
-                <input
-                  className="lib-search-input"
-                  placeholder="Search title or author..."
-                  value={query}
-                  onChange={e => setQuery(e.target.value)}
-                />
-              </div>
             </div>
 
-            {filteredBooks.length === 0 ? (
+            <div className="lib-collection-toolbar">
+              <ExpandingSearchDock
+                value={query}
+                onChange={setQuery}
+                placeholder="Search title or author..."
+              />
+            </div>
+
+            {filteredBooks.length === 0 && query ? (
               <p className="lib-empty">No books match &ldquo;{query}&rdquo;</p>
             ) : (
               <motion.div
@@ -455,6 +499,17 @@ export default function Library() {
                     />
                   </motion.div>
                 ))}
+                {/* Add book card */}
+                <motion.div variants={cardVariants}>
+                  <button className="lib-add-card" onClick={openUpload} title="Add a book">
+                    <div className="lib-add-card-icon">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                      </svg>
+                    </div>
+                    <span className="lib-add-card-label">Add book</span>
+                  </button>
+                </motion.div>
               </motion.div>
             )}
           </section>

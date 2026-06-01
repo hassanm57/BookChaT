@@ -6,8 +6,12 @@ import os
 import re
 from pathlib import Path
 
-import fitz
 from dotenv import load_dotenv
+
+# Load .env before any backend modules read os.environ at import time
+load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
+
+import fitz
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -18,8 +22,6 @@ from backend.retriever import retrieve
 from backend.llm import generate
 from backend.supabase_client import get_supabase
 from backend.upload import router as upload_router
-
-load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
 
 app = FastAPI(title="Folio API")
 

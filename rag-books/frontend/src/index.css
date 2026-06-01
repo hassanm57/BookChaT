@@ -1560,15 +1560,15 @@ a { text-decoration: none; color: inherit; }
 }
 
 .fo-node-icon {
-  width: 58px;
-  height: 58px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
   background: var(--text-primary);
   border: 1.5px solid rgba(28, 28, 28, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
+  font-size: 1.55rem;
   color: white;
   box-shadow: 0 4px 14px rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.14);
   transition: background var(--transition), border-color var(--transition), box-shadow var(--transition), transform var(--transition);
@@ -1576,7 +1576,7 @@ a { text-decoration: none; color: inherit; }
 }
 
 .fo-node-label {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.01em;
   color: var(--text-primary);
@@ -3461,16 +3461,35 @@ a { text-decoration: none; color: inherit; }
   justify-content: center;
 }
 
-.lib-nav-tag {
-  font-size: 0.72rem;
+.lib-nav-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lib-breadcrumb-root {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--text-muted);
-  background: var(--bg-secondary);
-  padding: 4px 14px;
-  border-radius: 20px;
-  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: color var(--transition);
+}
+.lib-breadcrumb-root:hover { color: var(--text-primary); }
+
+.lib-breadcrumb-sep {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  opacity: 0.5;
+  font-family: var(--font-body);
+}
+
+.lib-breadcrumb-current {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
 .lib-nav-actions {
@@ -3482,14 +3501,13 @@ a { text-decoration: none; color: inherit; }
 .lib-upload-btn {
   display: flex;
   align-items: center;
-  gap: 7px;
-  font-size: 0.82rem;
-  font-weight: 500;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   color: var(--text-primary);
   background: var(--surface);
   border: 1px solid var(--border);
-  padding: 8px 18px;
-  border-radius: 40px;
+  border-radius: 50%;
   transition: background var(--transition), color var(--transition), border-color var(--transition);
 }
 .lib-upload-btn:hover {
@@ -3583,27 +3601,29 @@ a { text-decoration: none; color: inherit; }
 /* ─── Featured Panel ─────────────────────────────────────────────────────── */
 .lib-feat {
   flex-shrink: 0;
-  width: 340px;
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border);
+  width: 480px;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.08), 0 1px 0 rgba(255,255,255,0.9) inset;
+  border: 1px solid rgba(255, 255, 255, 0.7);
 }
 
 .lib-feat-inner {
   display: flex;
-  gap: 18px;
-  align-items: flex-start;
+  gap: 24px;
+  align-items: center;
 }
 
 .lib-feat-cover {
-  width: 88px;
+  width: 148px;
   flex-shrink: 0;
   aspect-ratio: 2/3;
-  border-radius: 6px;
+  border-radius: 10px;
   overflow: hidden;
-  box-shadow: var(--shadow-book);
+  box-shadow: 8px 12px 32px rgba(0,0,0,0.28), -2px 2px 8px rgba(0,0,0,0.1);
   background: #2a2a2a;
 }
 
@@ -3618,7 +3638,6 @@ a { text-decoration: none; color: inherit; }
 .lib-feat-info {
   flex: 1;
   min-width: 0;
-  padding-top: 2px;
 }
 
 .lib-feat-genre {
@@ -3636,23 +3655,23 @@ a { text-decoration: none; color: inherit; }
 
 .lib-feat-title {
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 1.25rem;
   font-weight: 700;
   font-style: italic;
   color: var(--text-primary);
   line-height: 1.3;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 .lib-feat-author {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   color: var(--text-muted);
-  margin-bottom: 18px;
+  margin-bottom: 24px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3745,6 +3764,124 @@ a { text-decoration: none; color: inherit; }
   border-radius: 20px;
 }
 
+/* ─── Collection toolbar + ExpandingSearchDock ───────────────────────────── */
+.lib-collection-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0 20px;
+}
+
+.esd-wrap {
+  position: relative;
+  height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.esd-trigger {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+.esd-trigger:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+}
+
+.esd-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 40px;
+  padding: 0 8px 0 14px;
+  height: 40px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+
+.esd-search-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.esd-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  outline: none;
+  min-width: 0;
+}
+.esd-input::placeholder { color: var(--text-muted); }
+
+.esd-clear {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--transition), color var(--transition);
+}
+.esd-clear:hover { background: var(--border); color: var(--text-primary); }
+
+/* ─── Add book card ──────────────────────────────────────────────────────── */
+.lib-add-card {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.lib-add-card-icon {
+  aspect-ratio: 2/3;
+  width: 100%;
+  border-radius: 8px;
+  border: 2px dashed var(--border);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: border-color var(--transition), color var(--transition), background var(--transition);
+}
+.lib-add-card:hover .lib-add-card-icon {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
+}
+
+.lib-add-card-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: color var(--transition);
+}
+.lib-add-card:hover .lib-add-card-label { color: var(--accent); }
+
+/* ─── (legacy search — kept for reference) ─────────────────────────────── */
 .lib-search-wrap {
   display: flex;
   align-items: center;
@@ -3950,29 +4087,112 @@ a { text-decoration: none; color: inherit; }
   box-sizing: border-box;
 }
 
-/* ─── Lib user menu ──────────────────────────────────────────────────────── */
+/* ─── Lib user menu + dropdown ───────────────────────────────────────────── */
 .lib-user-menu {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  position: relative;
 }
 
-.lib-signout-btn {
-  width: 32px;
-  height: 32px;
+.lib-user-avatar {
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--text-primary);
+  color: var(--surface);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
-  transition: color var(--transition), background var(--transition), border-color var(--transition);
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color var(--transition), transform 0.18s ease;
 }
-.lib-signout-btn:hover {
-  color: var(--accent);
+.lib-user-avatar--open,
+.lib-user-avatar:hover {
   border-color: var(--accent);
-  background: var(--accent-light);
+  transform: scale(1.06);
+}
+
+.lib-user-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 230px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+  overflow: hidden;
+  z-index: 200;
+  transform-origin: top right;
+}
+
+.lib-dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+}
+
+.lib-dropdown-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  color: var(--surface);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lib-dropdown-info {
+  min-width: 0;
+}
+
+.lib-dropdown-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: capitalize;
+}
+
+.lib-dropdown-email {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.lib-dropdown-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0;
+}
+
+.lib-dropdown-signout {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: transparent;
+  transition: background var(--transition), color var(--transition);
+}
+.lib-dropdown-signout:hover {
+  background: var(--bg-secondary);
+  color: var(--accent);
 }
 
 /* ─── Library empty state ────────────────────────────────────────────────── */

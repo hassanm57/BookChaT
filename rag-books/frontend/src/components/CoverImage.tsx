@@ -33,7 +33,7 @@ export default function CoverImage({ book }: Props) {
 
   return (
     <img
-      src={book.cover_image ?? undefined}
+      src={book.cover_image ?? undefined} // book.cover_image can be null, but img src should be undefined if no image
       alt={book.title}
       onError={() => setFailed(true)}
     />

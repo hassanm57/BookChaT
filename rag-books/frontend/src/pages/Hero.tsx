@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import { motion } from 'framer-motion'
 import ReactLenis from 'lenis/react'
 import { ContainerScroll } from '../components/ContainerScroll'
@@ -17,6 +18,7 @@ const ASCII_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456
 
 export default function Hero() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const asciiRef = useRef<HTMLPreElement>(null)
   const mouseRef = useRef<{ x: number; y: number } | null>(null)
 
@@ -157,8 +159,14 @@ export default function Hero() {
           <a className="hero-nav-link" href="/pricing">Pricing</a>
         </div>
         <div className="hero-nav-actions">
-          <button className="hero-nav-cta" onClick={() => navigate('/library')}>Get started</button>
-          <HoverButton onClick={() => navigate('/library')}>Sign in</HoverButton>
+          {user ? (
+            <button className="hero-nav-cta" onClick={() => navigate('/library')}>Open Library</button>
+          ) : (
+            <>
+              <button className="hero-nav-cta" onClick={() => navigate('/signup')}>Get started</button>
+              <HoverButton onClick={() => navigate('/login')}>Sign in</HoverButton>
+            </>
+          )}
         </div>
       </nav>
 
