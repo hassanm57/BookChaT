@@ -23,12 +23,12 @@ export default function Chat() {
   const navigate = useNavigate()
   const [book, setBook] = useState<Book | null>(null)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
-  const [showPdf, setShowPdf] = useState(false)
+  const [showPdf, setShowPdf] = useState(true)
   const [pdfPage, setPdfPage] = useState(1)
 
   useEffect(() => {
     if (!bookId) return
-    fetchBook(bookId).then(setBook).catch(() => navigate('/'))
+    fetchBook(bookId).then(setBook).catch(() => navigate('/library'))
     fetchPdfUrl(bookId).then(setPdfUrl).catch(() => {})
   }, [bookId, navigate])
 
@@ -49,7 +49,7 @@ export default function Chat() {
   return (
     <div className="chat-layout">
       <div className="chat-topbar">
-        <button className="topbar-back" onClick={() => navigate('/')}>
+        <button className="topbar-back" onClick={() => navigate('/library')}>
           <BackIcon />
           Library
         </button>
@@ -77,6 +77,8 @@ export default function Chat() {
         <ChatPanel
           bookId={book.book_id}
           bookTitle={book.title}
+          bookAuthor={book.author}
+          bookGenre={book.genre}
           onCitationClick={handleCitationClick}
         />
       </div>
