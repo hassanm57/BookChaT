@@ -27,7 +27,7 @@ const BOOKS: BookData[] = [
 
 function Book3D({ title, author, isbn, width = 120, depth = 16 }: BookData) {
   const [imgErr, setImgErr] = useState(false)
-  const coverUrl = `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`
+  const coverUrl = `/bookshelf-covers/${isbn}.jpg`
 
   return (
     <div

@@ -350,9 +350,25 @@ function EmptyState({ onUpload }: { onUpload: () => void }) {
 export default function Library() {
   const navigate = useNavigate()
   const { user, signOut, isNewUser } = useAuth()
-  const [books, setBooks] = useState<Book[]>([])
+
+  // Cache key is per-user — stable once authenticated
+  const cacheKey = `folio_books_${user?.id ?? ''}`
+
+  const [books, setBooks] = useState<Book[]>(() => {
+    try {
+      const raw = localStorage.getItem(cacheKey)
+      if (raw) return JSON.parse(raw) as Book[]
+    } catch {}
+    return []
+  })
   const [selectedIndex, setSelectedIndex] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => {
+    try {
+      const raw = localStorage.getItem(cacheKey)
+      if (raw) return (JSON.parse(raw) as Book[]).length === 0
+    } catch {}
+    return true
+  })
   const [query, setQuery] = useState('')
   const [showUpload, setShowUpload] = useState(false)
   const [uploadKey, setUploadKey] = useState(0)
@@ -419,11 +435,20 @@ export default function Library() {
     pollingRef.current.set(bookId, id)
   }, [stopPolling])
 
+  // Keep cache in sync whenever books list changes
+  useEffect(() => {
+    try { localStorage.setItem(cacheKey, JSON.stringify(books)) } catch {}
+  }, [books, cacheKey])
+
   useEffect(() => {
     if (isNewUser) setShowOnboarding(true)
   }, [isNewUser])
 
   useEffect(() => {
+    // Start polling for any processing books already in cache
+    books.filter(b => b.status === 'processing').forEach(b => startPolling(b.book_id))
+
+    // Always fetch fresh data in background
     fetchBooks()
       .then(data => {
         setBooks(data)
@@ -431,6 +456,7 @@ export default function Library() {
         data.filter(b => b.status === 'processing').forEach(b => startPolling(b.book_id))
       })
       .catch(() => setLoading(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startPolling])
 
   const selected = books[selectedIndex] ?? null
