@@ -4,5 +4,7 @@ export interface Book {
   author: string
   genre: string
   pdf_filename: string
-  cover_image: string
+  cover_image: string | null
+  status: 'processing' | 'ready' | 'error'
+  created_at?: string
 }

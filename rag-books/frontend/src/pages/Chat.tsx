@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { fetchBook } from '../api'
+import { fetchBook, fetchPdfUrl } from '../api'
 import type { Book } from '../types'
 import ChatPanel from '../components/ChatPanel'
 import PdfViewer from '../components/PdfViewer'
@@ -22,11 +22,14 @@ export default function Chat() {
   const { bookId } = useParams<{ bookId: string }>()
   const navigate = useNavigate()
   const [book, setBook] = useState<Book | null>(null)
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [showPdf, setShowPdf] = useState(false)
   const [pdfPage, setPdfPage] = useState(1)
 
   useEffect(() => {
-    if (bookId) fetchBook(bookId).then(setBook).catch(() => navigate('/'))
+    if (!bookId) return
+    fetchBook(bookId).then(setBook).catch(() => navigate('/'))
+    fetchPdfUrl(bookId).then(setPdfUrl).catch(() => {})
   }, [bookId, navigate])
 
   const handleCitationClick = (page: number) => {
@@ -42,8 +45,6 @@ export default function Chat() {
       </div>
     )
   }
-
-  const pdfUrl = `/pdfs/${encodeURIComponent(book.pdf_filename)}`
 
   return (
     <div className="chat-layout">
@@ -66,7 +67,7 @@ export default function Chat() {
       </div>
 
       <div className="chat-body">
-        {showPdf && (
+        {showPdf && pdfUrl && (
           <PdfViewer
             pdfUrl={pdfUrl}
             page={pdfPage}

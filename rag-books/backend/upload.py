@@ -1,23 +1,25 @@
 """
 User PDF upload handler.
 
-Flow:
-1. Validate the uploaded file is a PDF
-2. Upload PDF bytes to Supabase Storage: pdfs/{user_id}/{book_id}.pdf
-3. Run the ingest pipeline (extract → chunk → embed → upsert Qdrant)
-4. Extract cover image, upload to Supabase Storage: covers/{user_id}/{book_id}_cover.jpg
-5. Insert a row into the public.books table
-6. Return the new book record
+Fast path (immediate response):
+1. Validate PDF
+2. Upload PDF to Supabase Storage
+3. Insert book record with status='processing'
+4. Return immediately
+
+Background task:
+5. Extract text, chunk, embed, upsert Qdrant
+6. Extract cover → upload to Storage
+7. Update book record: status='ready', cover_image=<url>
 """
 
-import io
 import os
 import tempfile
 from pathlib import Path
 from uuid import uuid4
 
-import fitz  # PyMuPDF
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, Form, File
+import fitz
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
 
@@ -30,7 +32,7 @@ from backend.supabase_client import get_supabase
 router = APIRouter()
 
 PDF_MAGIC = b"%PDF-"
-MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
+MAX_FILE_SIZE = 50 * 1024 * 1024
 
 
 def _validate_pdf(data: bytes) -> None:
@@ -38,6 +40,14 @@ def _validate_pdf(data: bytes) -> None:
         raise HTTPException(status_code=413, detail="File exceeds 50 MB limit")
     if not data.startswith(PDF_MAGIC):
         raise HTTPException(status_code=400, detail="File is not a valid PDF")
+
+
+def _ensure_buckets(sb) -> None:
+    existing = {b.name for b in sb.storage.list_buckets()}
+    if "pdfs" not in existing:
+        sb.storage.create_bucket("pdfs", options={"public": False})
+    if "covers" not in existing:
+        sb.storage.create_bucket("covers", options={"public": True})
 
 
 def _get_qdrant() -> QdrantClient:
@@ -52,9 +62,8 @@ def _get_qdrant() -> QdrantClient:
 
 
 def _upsert_chunks(client: QdrantClient, chunks: list[dict], title: str, author: str, user_id: str) -> None:
-    batch_size = 100
-    for i in range(0, len(chunks), batch_size):
-        batch = chunks[i : i + batch_size]
+    for i in range(0, len(chunks), 100):
+        batch = chunks[i : i + 100]
         points = [
             PointStruct(
                 id=str(uuid4()),
@@ -74,8 +83,46 @@ def _upsert_chunks(client: QdrantClient, chunks: list[dict], title: str, author:
         client.upsert(collection_name=QDRANT_COLLECTION, points=points)
 
 
+def _run_ingest(book_id: str, data: bytes, title: str, author: str, user_id: str) -> None:
+    sb = get_supabase()
+    try:
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+            tmp.write(data)
+            tmp_path = Path(tmp.name)
+
+        try:
+            doc = fitz.open(str(tmp_path))
+            pages = [{"page_number": i + 1, "text": page.get_text()} for i, page in enumerate(doc)]
+            cover_data: bytes | None = None
+            if doc.page_count > 0:
+                pixmap = doc[0].get_pixmap(dpi=150)
+                cover_data = pixmap.tobytes("jpeg")
+            doc.close()
+        finally:
+            tmp_path.unlink(missing_ok=True)
+
+        chunks = chunk_text(pages, book_id)
+        chunks = embed_chunks(chunks)
+        _upsert_chunks(_get_qdrant(), chunks, title=title, author=author, user_id=user_id)
+
+        cover_url: str | None = None
+        if cover_data:
+            cover_path = f"{user_id}/{book_id}_cover.jpg"
+            sb.storage.from_("covers").upload(cover_path, cover_data, {"content-type": "image/jpeg"})
+            cover_url = f"{os.environ['SUPABASE_URL']}/storage/v1/object/public/covers/{cover_path}"
+
+        update: dict = {"status": "ready"}
+        if cover_url:
+            update["cover_image"] = cover_url
+        sb.table("books").update(update).eq("book_id", book_id).execute()
+
+    except Exception:
+        sb.table("books").update({"status": "error"}).eq("book_id", book_id).execute()
+
+
 @router.post("/upload")
 async def upload_book(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     title: str = Form(...),
     author: str = Form(...),
@@ -86,49 +133,13 @@ async def upload_book(
     _validate_pdf(data)
 
     sb = get_supabase()
+    _ensure_buckets(sb)
     book_id = str(uuid4())
     safe_filename = f"{book_id}.pdf"
 
-    # ── 1. Upload PDF to Supabase Storage ────────────────────────────────────
     pdf_path = f"{user_id}/{safe_filename}"
     sb.storage.from_("pdfs").upload(pdf_path, data, {"content-type": "application/pdf"})
 
-    # ── 2. Ingest pipeline ───────────────────────────────────────────────────
-    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-        tmp.write(data)
-        tmp_path = Path(tmp.name)
-
-    try:
-        doc = fitz.open(str(tmp_path))
-
-        # Extract text pages
-        pages = [{"page_number": i + 1, "text": page.get_text()} for i, page in enumerate(doc)]
-
-        # Extract cover image
-        cover_data: bytes | None = None
-        if doc.page_count > 0:
-            pixmap = doc[0].get_pixmap(dpi=150)
-            cover_data = pixmap.tobytes("jpeg")
-
-        doc.close()
-    finally:
-        tmp_path.unlink(missing_ok=True)
-
-    # Chunk → embed → upsert
-    chunks = chunk_text(pages, book_id)
-    chunks = embed_chunks(chunks)
-    qdrant = _get_qdrant()
-    _upsert_chunks(qdrant, chunks, title=title, author=author, user_id=user_id)
-
-    # ── 3. Upload cover to Supabase Storage ──────────────────────────────────
-    cover_url: str | None = None
-    if cover_data:
-        cover_path = f"{user_id}/{book_id}_cover.jpg"
-        sb.storage.from_("covers").upload(cover_path, cover_data, {"content-type": "image/jpeg"})
-        supabase_url = os.environ["SUPABASE_URL"]
-        cover_url = f"{supabase_url}/storage/v1/object/public/covers/{cover_path}"
-
-    # ── 4. Insert book record into Supabase DB ───────────────────────────────
     row = {
         "user_id": user_id,
         "book_id": book_id,
@@ -136,15 +147,11 @@ async def upload_book(
         "author": author,
         "genre": genre,
         "pdf_filename": safe_filename,
-        "cover_image": cover_url,
+        "cover_image": None,
+        "status": "processing",
     }
     sb.table("books").insert(row).execute()
 
-    return {
-        "book_id": book_id,
-        "title": title,
-        "author": author,
-        "genre": genre,
-        "pdf_filename": safe_filename,
-        "cover_image": cover_url,
-    }
+    background_tasks.add_task(_run_ingest, book_id, data, title, author, user_id)
+
+    return row

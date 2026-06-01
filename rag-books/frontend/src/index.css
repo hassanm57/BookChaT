@@ -3870,6 +3870,71 @@ a { text-decoration: none; color: inherit; }
   text-overflow: ellipsis;
 }
 
+/* ─── Processing Card State ──────────────────────────────────────────────── */
+.lib-card--processing {
+  cursor: default;
+  pointer-events: none;
+}
+
+.lib-card--processing .lib-card-cover {
+  transform: none !important;
+  box-shadow: var(--shadow-book) !important;
+}
+
+.lib-card--processing .lib-card-cover img,
+.lib-card--processing .lib-card-cover > .cover-fallback {
+  filter: grayscale(1) brightness(0.55);
+}
+
+.lib-card-processing-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0,0,0,0.1);
+}
+
+.lib-card-processing-sweep {
+  position: absolute;
+  bottom: 0;
+  left: -55%;
+  width: 55%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
+  animation: lib-sweep 1.8s ease-in-out infinite;
+}
+
+@keyframes lib-sweep {
+  0%   { left: -55%; }
+  100% { left: 110%; }
+}
+
+.lib-card-ingesting {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+
+.lib-card-ingesting-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: lib-pulse-dot 1.3s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes lib-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.35; transform: scale(0.65); }
+}
+
 /* ─── Library Footer ─────────────────────────────────────────────────────── */
 .lib-footer {
   display: flex;
@@ -4344,6 +4409,7 @@ a { text-decoration: none; color: inherit; }
   box-shadow: 0 0 0 3px var(--accent-light);
 }
 .upload-select { cursor: pointer; }
+.upload-select--placeholder { color: var(--text-muted); }
 
 .upload-error {
   font-size: 0.82rem;
@@ -4372,3 +4438,26 @@ a { text-decoration: none; color: inherit; }
 }
 .upload-submit:hover:not(:disabled) { background: var(--accent); transform: translateY(-1px); }
 .upload-submit:disabled { opacity: 0.65; cursor: not-allowed; }
+
+/* ─── Upload extracting state ────────────────────────────────────────────── */
+.upload-extracting {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--accent);
+  margin-left: 8px;
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+
+.upload-input--extracting {
+  background: linear-gradient(90deg, var(--bg) 25%, var(--bg-secondary) 50%, var(--bg) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  color: transparent;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

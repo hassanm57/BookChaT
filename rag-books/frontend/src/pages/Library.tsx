@@ -1,7 +1,7 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { fetchBooks, uploadBook } from '../api'
+import { fetchBooks, fetchBook, uploadBook, extractMetadata } from '../api'
 import { useAuth } from '../contexts/AuthContext'
 import type { Book } from '../types'
 import BookCard from '../components/BookCard'
@@ -42,17 +42,27 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
   const [file, setFile] = useState<File | null>(null)
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
-  const [genre, setGenre] = useState('Fiction')
+  const [genre, setGenre] = useState('')
   const [loading, setLoading] = useState(false)
+  const [extracting, setExtracting] = useState(false)
   const [error, setError] = useState('')
   const [dragOver, setDragOver] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const handleFile = (f: File) => {
+  const handleFile = async (f: File) => {
     if (!f.name.endsWith('.pdf')) { setError('Only PDF files are supported.'); return }
     setFile(f)
     setError('')
-    if (!title) setTitle(f.name.replace('.pdf', '').replace(/[-_]/g, ' '))
+    setExtracting(true)
+    try {
+      const meta = await extractMetadata(f)
+      if (meta.title) setTitle(meta.title)
+      if (meta.author) setAuthor(meta.author)
+    } catch {
+      setTitle(f.name.replace(/\.pdf$/i, '').replace(/[-_]/g, ' '))
+    } finally {
+      setExtracting(false)
+    }
   }
 
   const handleDrop = (e: React.DragEvent) => {
@@ -67,6 +77,7 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
     if (!file) { setError('Please select a PDF.'); return }
     if (!title.trim()) { setError('Title is required.'); return }
     if (!author.trim()) { setError('Author is required.'); return }
+    if (!genre) { setError('Please choose a genre.'); return }
     setLoading(true)
     setError('')
     try {
@@ -75,7 +86,6 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
       onClose()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Upload failed.')
-    } finally {
       setLoading(false)
     }
   }
@@ -143,16 +153,41 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
 
           <div className="upload-fields">
             <div className="upload-field">
-              <label className="upload-label">Title</label>
-              <input className="upload-input" value={title} onChange={e => setTitle(e.target.value)} placeholder="Book title" required />
+              <label className="upload-label">
+                Title
+                {extracting && <span className="upload-extracting">reading PDF…</span>}
+              </label>
+              <input
+                className={`upload-input${extracting ? ' upload-input--extracting' : ''}`}
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder={extracting ? '' : 'Book title'}
+                disabled={extracting}
+                required
+              />
             </div>
             <div className="upload-field">
-              <label className="upload-label">Author</label>
-              <input className="upload-input" value={author} onChange={e => setAuthor(e.target.value)} placeholder="Author name" required />
+              <label className="upload-label">
+                Author
+                {extracting && <span className="upload-extracting">reading PDF…</span>}
+              </label>
+              <input
+                className={`upload-input${extracting ? ' upload-input--extracting' : ''}`}
+                value={author}
+                onChange={e => setAuthor(e.target.value)}
+                placeholder={extracting ? '' : 'Author name'}
+                disabled={extracting}
+                required
+              />
             </div>
             <div className="upload-field">
               <label className="upload-label">Genre</label>
-              <select className="upload-input upload-select" value={genre} onChange={e => setGenre(e.target.value)}>
+              <select
+                className={`upload-input upload-select${!genre ? ' upload-select--placeholder' : ''}`}
+                value={genre}
+                onChange={e => setGenre(e.target.value)}
+              >
+                <option value="" disabled>Choose a genre</option>
                 {GENRES.map(g => <option key={g}>{g}</option>)}
               </select>
             </div>
@@ -160,10 +195,10 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
 
           {error && <p className="upload-error">{error}</p>}
 
-          <button className="upload-submit" type="submit" disabled={loading}>
+          <button className="upload-submit" type="submit" disabled={loading || extracting}>
             {loading
-              ? <><span className="auth-spinner" /> Processing...</>
-              : 'Upload & ingest'}
+              ? <><span className="auth-spinner" /> Uploading...</>
+              : 'Upload'}
           </button>
         </form>
       </motion.div>
@@ -205,8 +240,11 @@ export default function Library() {
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [showUpload, setShowUpload] = useState(false)
+  const [uploadKey, setUploadKey] = useState(0)
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const pollingRef = useRef<Map<string, number>>(new Map())
 
+  // Scroll fix
   useEffect(() => {
     document.body.style.overflow = 'auto'
     document.documentElement.style.overflow = 'auto'
@@ -223,15 +261,49 @@ export default function Library() {
     }
   }, [])
 
+  // Cleanup all polling on unmount
+  useEffect(() => {
+    const ref = pollingRef.current
+    return () => { ref.forEach(id => window.clearInterval(id)) }
+  }, [])
+
+  const stopPolling = useCallback((bookId: string) => {
+    const id = pollingRef.current.get(bookId)
+    if (id !== undefined) {
+      window.clearInterval(id)
+      pollingRef.current.delete(bookId)
+    }
+  }, [])
+
+  const startPolling = useCallback((bookId: string) => {
+    if (pollingRef.current.has(bookId)) return
+    const id = window.setInterval(async () => {
+      try {
+        const book = await fetchBook(bookId)
+        if (book.status !== 'processing') {
+          stopPolling(bookId)
+          setBooks(prev => prev.map(b => b.book_id === bookId ? book : b))
+        }
+      } catch {
+        stopPolling(bookId)
+      }
+    }, 3000)
+    pollingRef.current.set(bookId, id)
+  }, [stopPolling])
+
   useEffect(() => {
     if (isNewUser) setShowOnboarding(true)
   }, [isNewUser])
 
   useEffect(() => {
     fetchBooks()
-      .then(data => { setBooks(data); setLoading(false) })
+      .then(data => {
+        setBooks(data)
+        setLoading(false)
+        data.filter(b => b.status === 'processing').forEach(b => startPolling(b.book_id))
+      })
       .catch(() => setLoading(false))
-  }, [])
+  }, [startPolling])
 
   const selected = books[selectedIndex] ?? null
 
@@ -245,6 +317,12 @@ export default function Library() {
   const handleUploaded = (book: Book) => {
     setBooks(prev => [book, ...prev])
     setSelectedIndex(0)
+    if (book.status === 'processing') startPolling(book.book_id)
+  }
+
+  const openUpload = () => {
+    setUploadKey(k => k + 1)
+    setShowUpload(true)
   }
 
   const initials = user?.email?.slice(0, 2).toUpperCase() ?? 'U'
@@ -259,13 +337,11 @@ export default function Library() {
 
   return (
     <div className="lib-page">
-      {/* Onboarding modal */}
       {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
 
-      {/* Upload modal */}
       <AnimatePresence>
         {showUpload && (
-          <UploadModal onClose={() => setShowUpload(false)} onUploaded={handleUploaded} />
+          <UploadModal key={uploadKey} onClose={() => setShowUpload(false)} onUploaded={handleUploaded} />
         )}
       </AnimatePresence>
 
@@ -279,7 +355,7 @@ export default function Library() {
           <span className="lib-nav-tag">My Library</span>
         </div>
         <div className="lib-nav-actions">
-          <button className="lib-upload-btn" onClick={() => setShowUpload(true)}>
+          <button className="lib-upload-btn" onClick={openUpload}>
             <UploadIcon />
             Upload PDF
           </button>
@@ -297,7 +373,7 @@ export default function Library() {
       </nav>
 
       {books.length === 0 ? (
-        <EmptyState onUpload={() => setShowUpload(true)} />
+        <EmptyState onUpload={openUpload} />
       ) : (
         <>
           {/* Hero */}
@@ -319,7 +395,7 @@ export default function Library() {
               </p>
               <button
                 className="lib-hero-cta"
-                onClick={() => selected && navigate(`/chat/${selected.book_id}`)}
+                onClick={() => selected && selected.status !== 'processing' && navigate(`/chat/${selected.book_id}`)}
               >
                 Continue reading
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -337,7 +413,7 @@ export default function Library() {
                 book={selected}
                 onPrev={() => setSelectedIndex(i => (i - 1 + books.length) % books.length)}
                 onNext={() => setSelectedIndex(i => (i + 1) % books.length)}
-                onRead={() => selected && navigate(`/chat/${selected.book_id}`)}
+                onRead={() => selected && selected.status !== 'processing' && navigate(`/chat/${selected.book_id}`)}
               />
             </motion.div>
           </section>

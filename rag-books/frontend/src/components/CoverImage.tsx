@@ -22,7 +22,7 @@ interface Props {
 export default function CoverImage({ book }: Props) {
   const [failed, setFailed] = useState(false)
 
-  if (failed) {
+  if (failed || !book.cover_image) {
     return (
       <div className="cover-fallback" style={{ background: getGradient(book.book_id) }}>
         <div className="cover-fallback-title">{book.title}</div>
@@ -33,7 +33,7 @@ export default function CoverImage({ book }: Props) {
 
   return (
     <img
-      src={`/covers/${book.book_id}_cover.jpg`}
+      src={book.cover_image ?? undefined}
       alt={book.title}
       onError={() => setFailed(true)}
     />

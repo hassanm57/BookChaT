@@ -3,10 +3,12 @@ FastAPI application entry point.
 """
 
 import os
+import re
 from pathlib import Path
 
+import fitz
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -34,6 +36,90 @@ app.include_router(upload_router)
 class ChatRequest(BaseModel):
     book_id: str
     query: str
+
+
+def _heuristic_metadata(doc: fitz.Document) -> tuple[str, str]:
+    """Extract title and author from first two pages using font-size and pattern heuristics."""
+    title = ""
+    author = ""
+
+    pages_to_scan = min(doc.page_count, 2)
+
+    # ── Title: largest font span on the first page ───────────────────────────
+    if not title and doc.page_count > 0:
+        spans: list[dict] = []
+        for block in doc[0].get_text("dict").get("blocks", []):
+            if block.get("type") != 0:
+                continue
+            for line in block.get("lines", []):
+                for span in line.get("spans", []):
+                    text = span["text"].strip()
+                    if text and len(text) > 1:
+                        spans.append({"text": text, "size": span["size"]})
+
+        if spans:
+            max_size = max(s["size"] for s in spans)
+            # Collect all spans within 10% of max font size as the title
+            title_parts = [s["text"] for s in spans if s["size"] >= max_size * 0.90]
+            title = " ".join(title_parts[:6]).strip()
+
+    # ── Author: scan lines for "by …" / "Author:" patterns ──────────────────
+    for i in range(pages_to_scan):
+        if author:
+            break
+        lines = [l.strip() for l in doc[i].get_text().splitlines() if l.strip()]
+        for idx, line in enumerate(lines):
+            low = line.lower()
+
+            # Standalone "by" keyword followed by next line
+            if low in ("by", "written by", "edited by"):
+                if idx + 1 < len(lines):
+                    author = lines[idx + 1]
+                    break
+
+            # "By Author Name" on same line
+            m = re.match(r"^(?:written |edited )?by\s+(.+)$", line, re.IGNORECASE)
+            if m:
+                author = m.group(1).strip()
+                break
+
+            # "Author: Name" or "Authors: Name"
+            m = re.match(r"^authors?:\s*(.+)$", line, re.IGNORECASE)
+            if m:
+                author = m.group(1).strip()
+                break
+
+    return title, author
+
+
+@app.post("/extract-metadata")
+async def extract_metadata(
+    file: UploadFile = File(...),
+    user_id: str = Depends(get_current_user),
+):
+    data = await file.read()
+    doc = fitz.open(stream=data, filetype="pdf")
+
+    # 1 — PDF metadata (fastest, works for most exported/digital PDFs)
+    meta = doc.metadata or {}
+    title = (meta.get("title") or "").strip()
+    author = (meta.get("author") or "").strip()
+
+    # 2 — Heuristic scan of first pages
+    if not title or not author:
+        h_title, h_author = _heuristic_metadata(doc)
+        if not title:
+            title = h_title
+        if not author:
+            author = h_author
+
+    doc.close()
+
+    # 3 — Filename fallback for title
+    if not title and file.filename:
+        title = file.filename.removesuffix(".pdf").replace("-", " ").replace("_", " ").title()
+
+    return {"title": title, "author": author}
 
 
 @app.get("/books")

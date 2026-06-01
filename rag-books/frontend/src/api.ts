@@ -28,6 +28,25 @@ export async function fetchBook(bookId: string): Promise<Book> {
   return res.json()
 }
 
+export async function fetchPdfUrl(bookId: string): Promise<string> {
+  const res = await fetch(`/api/books/${bookId}/pdf-url`, { headers: await authHeaders() })
+  if (!res.ok) throw new Error('Failed to get PDF URL')
+  const data = await res.json()
+  return data.url
+}
+
+export async function extractMetadata(file: File): Promise<{ title: string; author: string }> {
+  const form = new FormData()
+  form.append('file', file)
+  const res = await fetch('/api/extract-metadata', {
+    method: 'POST',
+    headers: await authHeadersFormData(),
+    body: form,
+  })
+  if (!res.ok) throw new Error('Extraction failed')
+  return res.json()
+}
+
 export async function uploadBook(file: File, title: string, author: string, genre: string): Promise<Book> {
   const form = new FormData()
   form.append('file', file)
