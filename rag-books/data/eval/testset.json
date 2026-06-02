@@ -1,1 +1,482 @@
-[]
+[
+  {
+    "question": "What was Mr. Dursley's occupation?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 2,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What was Harry Potter unaware of while he was sleeping?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 14,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What did Harry find among the mail on the doormat?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 26,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What does Hagrid imply about Harry's parents?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 39,
+    "question_type": "conceptual",
+    "difficulty": "hard"
+  },
+  {
+    "question": "What is the primary responsibility of the Ministry of Magic?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 51,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What type of books did Hagrid and Harry find in Flourish and Blotts?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 64,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What does Percy wear that indicates his status at Hogwarts?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 76,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What did Harry see out of the window as it was getting dark?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 89,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What did Neville's Great Uncle Algie do to try to make him use magic?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 101,
+    "question_type": "factual",
+    "difficulty": "hard"
+  },
+  {
+    "question": "What date did the break-in at Gringotts occur?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 114,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "Why was Neville unable to get into bed?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 126,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What was Hermione's reaction after Ron made a comment about her?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 138,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What did Harry dive after during the Quidditch match?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 151,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What did Percy Weasley receive for Christmas that the twins were teasing him about?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 163,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What is Dumbledore known for in relation to Nicolas Flamel?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 176,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What did Hagrid's note to Harry indicate about the dragon?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 188,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What did Hagrid find last Wednesday?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 201,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What did Hagrid tell the stranger about his job?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 213,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What distinctive feature did the key that Harry spotted have?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 226,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What did Voldemort say about Harry's mother during their confrontation?",
+    "book_id": "hp1",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "expected_page": 238,
+    "question_type": "factual",
+    "difficulty": "hard"
+  },
+  {
+    "question": "What company published the book?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 5,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What does Harry promise to do if Uncle Vernon signs his permission form?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 23,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What did Fudge suggest to have while he was with Harry?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 42,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What item did Percy claim was missing from his bedside table?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 60,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What did Harry assume was pulling the stagecoaches?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 79,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What has Sibyll Trelawney predicted for one student each year since she arrived at the school?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 97,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What did Professor Lupin hope Neville would assist him with?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 117,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What type of creature did Lupin refer to when he mentioned the water demon?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 135,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What color robes were the Hufflepuffs wearing?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 154,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What types of sweets are mentioned in the passage?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 172,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What is Hagrid worried about that is related to Dumbledore's responsibilities?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 191,
+    "question_type": "conceptual",
+    "difficulty": "hard"
+  },
+  {
+    "question": "What spell does Harry attempt to cast in the classroom?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 209,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What was the reaction of Harry's team after the match?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 229,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What unusual sight did Mr. Malfoy claim to see involving Harry Potter?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 247,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What color were the majority of the crowd's rosettes during the event?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 266,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What did Hermione do before they crossed the hall?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 285,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What does Sirius Black want to do quickly after speaking to Remus?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 306,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What did Black believe helped him maintain his sanity while imprisoned?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 324,
+    "question_type": "conceptual",
+    "difficulty": "hard"
+  },
+  {
+    "question": "What does Dumbledore say they need more of?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 343,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What spell did Hermione use to open the window?",
+    "book_id": "hp3",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "expected_page": 361,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "Who are the authors of the book?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 1,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What was Lydia Makhubu's role at the University of Swaziland before her retirement?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 70,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What types of organisms are made up of eukaryotic cells?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 138,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What role does phosphorylation play in the process of glycolysis?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 206,
+    "question_type": "conceptual",
+    "difficulty": "hard"
+  },
+  {
+    "question": "What is the role of cell division in multicellular organisms?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 274,
+    "question_type": "conceptual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What is the role of DNA ligase in the process of DNA synthesis?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 343,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What role does the miRNA-protein complex play in gene expression?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 411,
+    "question_type": "conceptual",
+    "difficulty": "hard"
+  },
+  {
+    "question": "What significant event in biology occurred on November 24, 1859?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 480,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What will the next unit of chapters focus on in relation to biological diversity?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 550,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What are the main resources that photosynthetic organisms find in terrestrial habitats?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 618,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What type of reproduction do the specialized polyps that lack tentacles perform?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 687,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What are some functions that modified roots can have?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 756,
+    "question_type": "conceptual",
+    "difficulty": "hard"
+  },
+  {
+    "question": "What forms from a mass of dividing, undifferentiated cells in the shoot during vegetative reproduction?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 824,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What are some major dietary sources of Vitamin B2?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 893,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What is necessary for the transmission of HIV between individuals?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 961,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What triggers the activation of the egg cell during fertilization?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 1032,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What role does the iris play in the functioning of the eye?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 1101,
+    "question_type": "conceptual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What did Sinervo and Lively find about the relative abundance of different male types over time?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 1170,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What are the four important factors that ecologists consider in biogeochemical cycles?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 1240,
+    "question_type": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "question": "What is the primary function of the central vacuole in a mature plant cell?",
+    "book_id": "biology_campbell",
+    "title": "Biology",
+    "expected_page": 1309,
+    "question_type": "conceptual",
+    "difficulty": "easy"
+  }
+]
