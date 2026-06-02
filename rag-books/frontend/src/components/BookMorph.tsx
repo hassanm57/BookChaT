@@ -9,26 +9,26 @@ const N = 20
 const V_MAX = 3200
 
 const COVERS = [
-  'https://covers.openlibrary.org/b/isbn/9780743273565-M.jpg',
-  'https://covers.openlibrary.org/b/isbn/9780451524935-M.jpg',
-  'https://covers.openlibrary.org/b/isbn/9780061743528-M.jpg',
-  'https://covers.openlibrary.org/b/isbn/9780316769174-M.jpg',
-  'https://covers.openlibrary.org/b/isbn/9780060850524-M.jpg',
-  'https://covers.openlibrary.org/b/isbn/9780399501487-M.jpg',
-  'https://covers.openlibrary.org/b/isbn/9780679734505-M.jpg',
-  'https://covers.openlibrary.org/b/isbn/9780062315007-M.jpg',
-  'https://covers.openlibrary.org/b/isbn/9780439708180-M.jpg',
-  'https://covers.openlibrary.org/b/isbn/9780547928227-M.jpg',
-  'https://covers.openlibrary.org/b/isbn/9781451673319-M.jpg',
-  'https://covers.openlibrary.org/b/isbn/9780451526342-M.jpg',
-  'https://covers.openlibrary.org/b/isbn/9780679720201-M.jpg',
-  'https://covers.openlibrary.org/b/isbn/9780140177398-M.jpg',
-  'https://covers.openlibrary.org/b/isbn/9780684801223-M.jpg',
-  'https://covers.openlibrary.org/b/isbn/9780743477123-M.jpg',
-  'https://covers.openlibrary.org/b/isbn/9780142437247-M.jpg',
-  'https://covers.openlibrary.org/b/isbn/9780141439518-M.jpg',
-  'https://covers.openlibrary.org/b/isbn/9780142437230-M.jpg',
-  'https://covers.openlibrary.org/b/isbn/9780743477116-M.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9780743273565.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9780451524935.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9780061743528.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9780316769174.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9780060850524.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9780399501487.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9780679734505.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9780062315007.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9780439708180.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9780547928227.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9781451673319.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9780451526342.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9780679720201.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9780140177398.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9780684801223.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9780743477123.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9780142437247.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9780141439518.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9780142437230.jpg',
+  'https://hmebvjlqvtyodpwoaaqu.supabase.co/storage/v1/object/public/covers/hero/9780743477116.jpg',
 ]
 
 const lerp = (a: number, b: number, t: number) => a * (1 - t) + b * t
@@ -72,6 +72,12 @@ export default function BookMorph() {
   const [morphReady, setMorphReady] = useState(false)
   const [visible, setVisible] = useState(false)
   const lenis = useLenis()
+
+  // Preload all covers immediately on mount — browser caches them before the
+  // scroll animation brings the cards into view
+  useEffect(() => {
+    COVERS.forEach(src => { const img = new Image(); img.src = src })
+  }, [])
 
   // ── Virtual scroll (mirrors original component's approach) ───────────────
   const virtualScroll = useMotionValue(0)

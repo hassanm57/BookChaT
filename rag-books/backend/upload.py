@@ -24,6 +24,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
 
 from backend.auth import get_current_user
+from backend.cache import cache_del
 from backend.chunker import chunk_text
 from backend.config import QDRANT_COLLECTION, QDRANT_HOST, QDRANT_PORT
 from backend.embedder import embed_chunks
@@ -124,9 +125,12 @@ def _run_ingest(book_id: str, data: bytes, title: str, author: str, user_id: str
         if cover_url:
             update["cover_image"] = cover_url
         sb.table("books").update(update).eq("book_id", book_id).execute()
+        # Bust stale cache so Library sees status=ready and cover_image immediately
+        cache_del(f"books:{user_id}", f"book:{user_id}:{book_id}")
 
     except Exception:
         sb.table("books").update({"status": "error"}).eq("book_id", book_id).execute()
+        cache_del(f"books:{user_id}", f"book:{user_id}:{book_id}")
 
 
 @router.post("/upload")
@@ -162,6 +166,8 @@ async def upload_book(
         "status": "processing",
     }
     sb.table("books").insert(row).execute()
+    # Bust list cache so the new book appears immediately in Library
+    cache_del(f"books:{user_id}")
 
     background_tasks.add_task(_run_ingest, book_id, data, title, author, user_id)
 

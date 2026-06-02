@@ -20,6 +20,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from backend.auth import get_current_user
+from backend.cache import cache_get, cache_set
 from backend.rate_limiter import limiter
 from backend.retriever import retrieve
 from backend.llm import generate
@@ -134,14 +135,23 @@ async def extract_metadata(
 @app.get("/books")
 @limiter.limit("60/minute")
 def list_books(request: Request, user_id: str = Depends(get_current_user)):
+    ck = f"books:{user_id}"
+    cached = cache_get(ck)
+    if cached is not None:
+        return cached
     sb = get_supabase()
     result = sb.table("books").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
+    cache_set(ck, result.data, 30)
     return result.data
 
 
 @app.get("/books/{book_id}")
 @limiter.limit("120/minute")
 def get_book(request: Request, book_id: str, user_id: str = Depends(get_current_user)):
+    ck = f"book:{user_id}:{book_id}"
+    cached = cache_get(ck)
+    if cached is not None:
+        return cached
     sb = get_supabase()
     result = (
         sb.table("books")
@@ -153,12 +163,18 @@ def get_book(request: Request, book_id: str, user_id: str = Depends(get_current_
     )
     if not result.data:
         raise HTTPException(status_code=404, detail="Book not found")
+    cache_set(ck, result.data, 30)
     return result.data
 
 
 @app.get("/books/{book_id}/pdf-url")
 @limiter.limit("30/minute")
 def get_pdf_url(request: Request, book_id: str, user_id: str = Depends(get_current_user)):
+    ck = f"pdf_url:{user_id}:{book_id}"
+    cached = cache_get(ck)
+    if cached:
+        return {"url": cached}
+
     sb = get_supabase()
     result = (
         sb.table("books")
@@ -173,7 +189,9 @@ def get_pdf_url(request: Request, book_id: str, user_id: str = Depends(get_curre
 
     pdf_path = f"{user_id}/{result.data['pdf_filename']}"
     signed = sb.storage.from_("pdfs").create_signed_url(pdf_path, expires_in=3600)
-    return {"url": signed["signedURL"]}
+    url = signed["signedURL"]
+    cache_set(ck, url, 3300)  # 55 min — 5 min buffer before Supabase 1hr expiry
+    return {"url": url}
 
 
 @app.post("/chat")

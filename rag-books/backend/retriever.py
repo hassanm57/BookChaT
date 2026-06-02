@@ -11,10 +11,13 @@ RRF constant k=60 is the standard value; it dampens the influence of very high r
 so that a result ranked #1 in one list but absent in the other isn't over-penalised.
 """
 
+import hashlib
+
 from rank_bm25 import BM25Okapi
 from qdrant_client import QdrantClient
 from qdrant_client.models import Filter, FieldCondition, MatchValue
 
+from backend.cache import cache_get, cache_set
 from backend.config import QDRANT_HOST, QDRANT_PORT, QDRANT_COLLECTION
 from backend.embedder import get_model
 
@@ -30,6 +33,12 @@ def get_client() -> QdrantClient:
 
 
 def retrieve(query: str, book_id: str, user_id: str | None = None, top_k: int = 8) -> list[dict]:
+    q_hash = hashlib.sha256(query.lower().strip().encode()).hexdigest()[:16]
+    ck = f"rag_retrieve:{book_id}:{q_hash}"
+    cached = cache_get(ck)
+    if cached is not None:
+        return cached
+
     model = get_model()
     query_vector = model.encode(query).tolist()
 
@@ -80,4 +89,6 @@ def retrieve(query: str, book_id: str, user_id: str | None = None, top_k: int = 
         c["score"] = 1 / (RRF_K + c["dense_rank"]) + 1 / (RRF_K + c["bm25_rank"])
 
     candidates.sort(key=lambda x: x["score"], reverse=True)
-    return candidates[:top_k]
+    result = candidates[:top_k]
+    cache_set(ck, result, 3600)
+    return result

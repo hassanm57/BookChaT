@@ -9,11 +9,15 @@ Responsibilities:
 - Emits [DONE] to signal end of stream
 """
 
+import asyncio
+import hashlib
 import json
 import os
 from typing import AsyncGenerator
 
 from openai import AsyncOpenAI
+
+from backend.cache import cache_get, cache_set
 
 SYSTEM_PROMPT = """You are an expert reading assistant helping a user understand their book.
 You are given a set of passages extracted from the book, each labelled with its page number [p.X].
@@ -53,6 +57,23 @@ def _build_context(chunks: list[dict]) -> str:
 
 
 async def generate(query: str, chunks: list[dict]) -> AsyncGenerator[str, None]:
+    book_id = chunks[0]["book_id"] if chunks else "unknown"
+    q_hash  = hashlib.sha256(query.lower().strip().encode()).hexdigest()[:16]
+    ck      = f"rag_answer:{book_id}:{q_hash}"
+
+    cached = cache_get(ck)
+    if cached:
+        # Replay word-by-word at 3 ms/word — fast streaming feel from cache
+        words = cached["answer"].split(" ")
+        for i, word in enumerate(words):
+            token = word if i == 0 else " " + word
+            yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
+            await asyncio.sleep(0.003)
+        yield f"data: {json.dumps({'type': 'citations', 'sources': cached['citations']})}\n\n"
+        yield f"data: {json.dumps({'type': 'follow_ups', 'questions': cached['follow_ups']})}\n\n"
+        yield "data: [DONE]\n\n"
+        return
+
     client = AsyncOpenAI(api_key=os.environ["OPENAI_API_KEY"])
     context = _build_context(chunks)
 
@@ -103,4 +124,7 @@ async def generate(query: str, chunks: list[dict]) -> AsyncGenerator[str, None]:
         follow_ups = []
 
     yield f"data: {json.dumps({'type': 'follow_ups', 'questions': follow_ups})}\n\n"
+
+    cache_set(ck, {"answer": full_response, "citations": sources, "follow_ups": follow_ups}, 3600)
+
     yield "data: [DONE]\n\n"
