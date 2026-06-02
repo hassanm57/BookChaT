@@ -7,8 +7,8 @@ import os
 from pathlib import Path
 
 # --- Chunking ---
-CHUNK_SIZE = 400
-CHUNK_OVERLAP = 50
+CHUNK_SIZE = 800
+CHUNK_OVERLAP = 150
 
 # --- Embedding ---
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"

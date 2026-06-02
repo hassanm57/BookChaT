@@ -18,7 +18,7 @@ const ASCII_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456
 
 export default function Hero() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const asciiRef = useRef<HTMLPreElement>(null)
   const mouseRef = useRef<{ x: number; y: number } | null>(null)
 
@@ -159,14 +159,14 @@ export default function Hero() {
           <a className="hero-nav-link" href="/pricing">Pricing</a>
         </div>
         <div className="hero-nav-actions">
-          {user ? (
+          {!authLoading && (user ? (
             <button className="hero-nav-cta" onClick={() => navigate('/library')}>Open Library</button>
           ) : (
             <>
               <button className="hero-nav-cta" onClick={() => navigate('/signup')}>Get started</button>
               <HoverButton onClick={() => navigate('/login')}>Sign in</HoverButton>
             </>
-          )}
+          ))}
         </div>
       </nav>
 

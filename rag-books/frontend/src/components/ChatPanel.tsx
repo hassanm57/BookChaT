@@ -1,5 +1,31 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { motion } from 'framer-motion'
 import { supabase } from '../lib/supabase'
+
+function ShiningText({ text }: { text: string }) {
+  return (
+    <motion.span
+      style={{
+        background: 'linear-gradient(110deg, #7a7470 35%, #1c1c1c 50%, #7a7470 75%, #7a7470)',
+        backgroundSize: '200% 100%',
+        WebkitBackgroundClip: 'text',
+        backgroundClip: 'text',
+        color: 'transparent',
+        fontSize: '0.7rem',
+        fontWeight: 600,
+        fontFamily: 'var(--font-sans)',
+        letterSpacing: '0.04em',
+        textTransform: 'uppercase' as const,
+        display: 'inline-block',
+      }}
+      initial={{ backgroundPosition: '200% 0' }}
+      animate={{ backgroundPosition: '-200% 0' }}
+      transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
+    >
+      {text}
+    </motion.span>
+  )
+}
 
 interface Citation {
   page_number: number
@@ -261,7 +287,16 @@ export default function ChatPanel({ bookId, bookTitle, bookAuthor, bookGenre, on
             {msg.role === 'assistant' && (
               <img src="/logo.png" alt="Folio" className="msg-avatar-img" />
             )}
-            <div className={`msg-bubble msg-${msg.role}`}>
+            <div className="msg-body">
+              {msg.role === 'assistant' && (
+                <div className="msg-sender-label">
+                  {streaming && i === messages.length - 1
+                    ? <ShiningText text="Folio AI" />
+                    : <span className="msg-sender-static">Folio AI</span>
+                  }
+                </div>
+              )}
+              <div className={`msg-bubble msg-${msg.role}`}>
               {msg.content || (streaming && i === messages.length - 1
                 ? <span className="typing-dots"><span /><span /><span /></span>
                 : null
@@ -298,6 +333,7 @@ export default function ChatPanel({ bookId, bookTitle, bookAuthor, bookGenre, on
                   ))}
                 </div>
               )}
+              </div>
             </div>
           </div>
         ))}

@@ -16,24 +16,16 @@ function PageSkeleton() {
   )
 }
 
-// Memoized page item — only re-renders when its index changes (never during scroll)
-const PageItem = memo(function PageItem({
-  index,
-  refCallback,
-}: {
-  index: number
-  refCallback: (el: HTMLDivElement | null) => void
-}) {
+// Memoized — only the <Page> canvas re-renders if index changes (never during scroll)
+const PageItem = memo(function PageItem({ index }: { index: number }) {
   return (
-    <div ref={refCallback} className="pdf-page-wrapper">
-      <Page
-        pageNumber={index + 1}
-        width={520}
-        renderTextLayer={true}
-        renderAnnotationLayer={false}
-        loading={<PageSkeleton />}
-      />
-    </div>
+    <Page
+      pageNumber={index + 1}
+      width={520}
+      renderTextLayer={true}
+      renderAnnotationLayer={false}
+      loading={<PageSkeleton />}
+    />
   )
 })
 
@@ -60,14 +52,6 @@ const PdfViewer = forwardRef<PdfViewerHandle, Props>(function PdfViewer({ pdfUrl
     },
   }))
 
-  // Stable ref callbacks — recreated only when numPages changes, not on every render
-  const refCallbacks = useRef<((el: HTMLDivElement | null) => void)[]>([])
-  useEffect(() => {
-    refCallbacks.current = Array.from({ length: numPages }, (_, i) => (el: HTMLDivElement | null) => {
-      pageRefs.current[i] = el
-    })
-  }, [numPages])
-
   const setupObserver = useCallback(() => {
     observerRef.current?.disconnect()
     if (!scrollRef.current || numPages === 0) return
@@ -83,7 +67,6 @@ const PdfViewer = forwardRef<PdfViewerHandle, Props>(function PdfViewer({ pdfUrl
         })
         if (best.idx === -1) return
 
-        // Debounce: wait for scroll to settle before updating page indicator
         if (debounceRef.current) clearTimeout(debounceRef.current)
         debounceRef.current = setTimeout(() => {
           setCurrentPage(best.idx + 1)
@@ -91,7 +74,7 @@ const PdfViewer = forwardRef<PdfViewerHandle, Props>(function PdfViewer({ pdfUrl
       },
       { root: scrollRef.current, threshold: [0.1, 0.3, 0.5, 0.75] },
     )
-    pageRefs.current.forEach(ref => ref && observerRef.current!.observe(ref))
+    pageRefs.current.forEach(r => r && observerRef.current!.observe(r))
   }, [numPages])
 
   useEffect(() => {
@@ -126,11 +109,14 @@ const PdfViewer = forwardRef<PdfViewerHandle, Props>(function PdfViewer({ pdfUrl
             loading={<PageSkeleton />}
           >
             {numPages > 0 && Array.from({ length: numPages }, (_, i) => (
-              <PageItem
+              // Ref lives on the plain wrapper div — set during render, always populated
+              <div
                 key={i}
-                index={i}
-                refCallback={refCallbacks.current[i] ?? (() => {})}
-              />
+                ref={el => { pageRefs.current[i] = el }}
+                className="pdf-page-wrapper"
+              >
+                <PageItem index={i} />
+              </div>
             ))}
           </Document>
         )}

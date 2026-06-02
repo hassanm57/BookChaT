@@ -804,6 +804,7 @@ a { text-decoration: none; color: inherit; }
   box-shadow: 0 4px 24px rgba(0,0,0,0.4);
   border-radius: 2px;
   overflow: hidden;
+  margin-bottom: 16px;
 }
 
 .pdf-page-skeleton {
@@ -912,8 +913,31 @@ a { text-decoration: none; color: inherit; }
   box-shadow: 0 1px 4px rgba(0,0,0,0.14);
 }
 
-.msg-bubble {
+.msg-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   max-width: 80%;
+  min-width: 0;
+}
+
+.msg-sender-label {
+  padding-left: 3px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.msg-sender-static {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.msg-bubble {
   padding: 12px 16px;
   border-radius: 16px;
   font-size: 0.875rem;

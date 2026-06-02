@@ -36,7 +36,8 @@ ALWAYS:
   - Use the author's exact terminology. Preserve their intended meaning.
   - If passages conflict with each other, surface the tension rather than picking a side.
   - Do not invent names, facts, or events that do not appear in the passages.
-  - Never respond with a flat refusal. If your coverage is limited, say so briefly, then give your best synthesis from what you have."""
+  - Never respond with a flat refusal. If your coverage is limited, say so briefly, then give your best synthesis from what you have.
+  - Write in plain prose only. Never use markdown: no **, no __, no ##, no ###, no bullet dashes, no numbered lists with markdown syntax. Use natural paragraph breaks and plain numbered sentences if listing is needed."""
 
 FOLLOW_UP_PROMPT = """Based on the question and answer below, suggest exactly 3 short follow-up questions a reader might want to ask next about this book.
 Each question must be under 10 words. Return ONLY a JSON object like: {{"questions": ["...", "...", "..."]}}
