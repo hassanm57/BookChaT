@@ -133,6 +133,60 @@ function getSuggestedPrompts(genre: string): string[] {
   return DEFAULT_PROMPTS
 }
 
+const PageIcon = () => (
+  <svg width="9" height="10" viewBox="0 0 9 10" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1.5 1h4l2 2v7h-6V1z"/>
+    <path d="M5.5 1v2h2"/>
+  </svg>
+)
+
+const chipContainerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.055, delayChildren: 0.05 },
+  },
+}
+
+const chipItemVariants = {
+  hidden: { opacity: 0, scale: 0.7, y: 8 },
+  show: {
+    opacity: 1, scale: 1, y: 0,
+    transition: { type: 'spring' as const, stiffness: 480, damping: 22 },
+  },
+}
+
+function CitationChips({ citations, onPageClick }: { citations: Citation[]; onPageClick: (p: number) => void }) {
+  const seen = new Set<number>()
+  const unique = [...citations]
+    .sort((a, b) => a.page_number - b.page_number)
+    .filter(c => { if (seen.has(c.page_number)) return false; seen.add(c.page_number); return true })
+
+  return (
+    <motion.div
+      className="citation-chips"
+      variants={chipContainerVariants}
+      initial="hidden"
+      animate="show"
+    >
+      {unique.map(c => (
+        <motion.button
+          key={c.page_number}
+          className="citation-chip"
+          variants={chipItemVariants}
+          whileHover={{ scale: 1.07, y: -2 }}
+          whileTap={{ scale: 0.91 }}
+          onClick={() => onPageClick(c.page_number)}
+          title={c.text}
+        >
+          <PageIcon />
+          <span>p.{c.page_number}</span>
+        </motion.button>
+      ))}
+    </motion.div>
+  )
+}
+
 const SendIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
     <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
@@ -303,20 +357,7 @@ export default function ChatPanel({ bookId, bookTitle, bookAuthor, bookGenre, on
               )}
 
               {msg.citations && msg.citations.length > 0 && (
-                <div className="citation-chips">
-                  {[...msg.citations]
-                    .sort((a, b) => a.page_number - b.page_number)
-                    .map((c, j) => (
-                      <button
-                        key={j}
-                        className="citation-chip"
-                        onClick={() => onCitationClick(c.page_number)}
-                        title={c.text}
-                      >
-                        p.{c.page_number}
-                      </button>
-                    ))}
-                </div>
+                <CitationChips citations={msg.citations} onPageClick={onCitationClick} />
               )}
 
               {msg.followUps && msg.followUps.length > 0 && (
