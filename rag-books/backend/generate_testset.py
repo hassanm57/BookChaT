@@ -95,7 +95,7 @@ def generate_question(client: OpenAI, title: str, author: str, page: dict) -> di
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_msg},
             ],
-            max_tokens=120,
+            max_completion_tokens=120,
             temperature=0.4,
         )
         raw = resp.choices[0].message.content or ""

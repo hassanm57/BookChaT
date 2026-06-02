@@ -112,7 +112,7 @@ def judge_answer(client, question: str, chunks: list[dict], answer: str) -> dict
         resp = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=60,
+            max_completion_tokens=60,
             temperature=0,
         )
         raw = resp.choices[0].message.content or "{}"

@@ -95,7 +95,7 @@ async def generate(query: str, chunks: list[dict]) -> AsyncGenerator[str, None]:
                 )}
             ],
             response_format={"type": "json_object"},
-            max_tokens=120,
+            max_completion_tokens=120,
         )
         follow_up_text = follow_up_response.choices[0].message.content or "{}"
         follow_ups = json.loads(follow_up_text).get("questions", [])[:3]
