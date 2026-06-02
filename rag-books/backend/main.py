@@ -12,18 +12,23 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
 
 import fitz
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from backend.auth import get_current_user
+from backend.rate_limiter import limiter
 from backend.retriever import retrieve
 from backend.llm import generate
 from backend.supabase_client import get_supabase
 from backend.upload import router as upload_router
 
 app = FastAPI(title="Folio API")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -95,7 +100,9 @@ def _heuristic_metadata(doc: fitz.Document) -> tuple[str, str]:
 
 
 @app.post("/extract-metadata")
+@limiter.limit("20/minute")
 async def extract_metadata(
+    request: Request,
     file: UploadFile = File(...),
     user_id: str = Depends(get_current_user),
 ):
@@ -125,14 +132,16 @@ async def extract_metadata(
 
 
 @app.get("/books")
-def list_books(user_id: str = Depends(get_current_user)):
+@limiter.limit("60/minute")
+def list_books(request: Request, user_id: str = Depends(get_current_user)):
     sb = get_supabase()
     result = sb.table("books").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
     return result.data
 
 
 @app.get("/books/{book_id}")
-def get_book(book_id: str, user_id: str = Depends(get_current_user)):
+@limiter.limit("120/minute")
+def get_book(request: Request, book_id: str, user_id: str = Depends(get_current_user)):
     sb = get_supabase()
     result = (
         sb.table("books")
@@ -148,7 +157,8 @@ def get_book(book_id: str, user_id: str = Depends(get_current_user)):
 
 
 @app.get("/books/{book_id}/pdf-url")
-def get_pdf_url(book_id: str, user_id: str = Depends(get_current_user)):
+@limiter.limit("30/minute")
+def get_pdf_url(request: Request, book_id: str, user_id: str = Depends(get_current_user)):
     sb = get_supabase()
     result = (
         sb.table("books")
@@ -167,24 +177,25 @@ def get_pdf_url(book_id: str, user_id: str = Depends(get_current_user)):
 
 
 @app.post("/chat")
-async def chat(request: ChatRequest, user_id: str = Depends(get_current_user)):
+@limiter.limit("20/minute")
+async def chat(request: Request, body: ChatRequest, user_id: str = Depends(get_current_user)):
     # Verify ownership before retrieval
     sb = get_supabase()
     result = (
         sb.table("books")
         .select("book_id")
         .eq("user_id", user_id)
-        .eq("book_id", request.book_id)
+        .eq("book_id", body.book_id)
         .execute()
     )
     if not result.data:
         raise HTTPException(status_code=403, detail="Book not found or access denied")
 
-    chunks = retrieve(request.query, request.book_id)
+    chunks = retrieve(body.query, body.book_id)
     if not chunks:
         raise HTTPException(status_code=404, detail="No relevant passages found")
 
     return StreamingResponse(
-        generate(request.query, chunks),
+        generate(body.query, chunks),
         media_type="text/event-stream",
     )

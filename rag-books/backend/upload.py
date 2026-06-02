@@ -19,7 +19,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import fitz
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Request, UploadFile
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
 
@@ -27,6 +27,7 @@ from backend.auth import get_current_user
 from backend.chunker import chunk_text
 from backend.config import QDRANT_COLLECTION, QDRANT_HOST, QDRANT_PORT
 from backend.embedder import embed_chunks
+from backend.rate_limiter import limiter
 from backend.supabase_client import get_supabase
 
 router = APIRouter()
@@ -129,7 +130,9 @@ def _run_ingest(book_id: str, data: bytes, title: str, author: str, user_id: str
 
 
 @router.post("/upload")
+@limiter.limit("5/hour")
 async def upload_book(
+    request: Request,
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     title: str = Form(...),

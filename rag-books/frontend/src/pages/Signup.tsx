@@ -3,6 +3,40 @@ import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 
+const RATE_KEY = 'folio_auth_attempts'
+const MAX_ATTEMPTS = 5
+const WINDOW_MS = 15 * 60 * 1000
+
+function getRateState(): { count: number; since: number } | null {
+  try {
+    const raw = localStorage.getItem(RATE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (Date.now() - parsed.since > WINDOW_MS) { localStorage.removeItem(RATE_KEY); return null }
+    return parsed
+  } catch { return null }
+}
+
+function recordAttempt() {
+  const state = getRateState()
+  if (state) {
+    localStorage.setItem(RATE_KEY, JSON.stringify({ count: state.count + 1, since: state.since }))
+  } else {
+    localStorage.setItem(RATE_KEY, JSON.stringify({ count: 1, since: Date.now() }))
+  }
+}
+
+function isRateLimited(): boolean {
+  const state = getRateState()
+  return state !== null && state.count >= MAX_ATTEMPTS
+}
+
+function minutesRemaining(): number {
+  const state = getRateState()
+  if (!state) return 0
+  return Math.ceil((WINDOW_MS - (Date.now() - state.since)) / 60000)
+}
+
 export default function Signup() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
@@ -17,7 +51,12 @@ export default function Signup() {
     setError('')
     if (password !== confirm) { setError("Passwords don't match"); return }
     if (password.length < 8) { setError('Password must be at least 8 characters'); return }
+    if (isRateLimited()) {
+      setError(`Too many attempts. Try again in ${minutesRemaining()} minute(s).`)
+      return
+    }
     setLoading(true)
+    recordAttempt()
     const { error } = await supabase.auth.signUp({ email, password })
     setLoading(false)
     if (error) { setError(error.message); return }
