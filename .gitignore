@@ -29,3 +29,4 @@ rag-books/data/eval/*
 !rag-books/data/eval/testset.json
 rag-books/data/uploads/*
 !rag-books/data/uploads/.gitkeep
+architecture.html
