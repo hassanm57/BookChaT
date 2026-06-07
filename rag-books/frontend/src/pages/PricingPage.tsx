@@ -5,7 +5,7 @@ import { ScatterReveal } from '../components/ScatterReveal'
 import ReactLenis from 'lenis/react'
 import { useEffect } from 'react'
 
-export default function PricingPage() {
+export default function PricingPage() { // this is not implemented yet. shelving this for now.
   const navigate = useNavigate()
 
   useEffect(() => {
