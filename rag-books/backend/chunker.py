@@ -14,7 +14,7 @@ Responsibilities:
 from backend.config import CHUNK_SIZE, CHUNK_OVERLAP
 
 
-def chunk_text(pages: list[dict], book_id: str) -> list[dict]:
+def chunk_text(pages: list[dict], book_id: str) -> list[dict]: # A few changes to the chunker here and there, lets experient with different chunk sizes and overlaps to see how it affects the quality of the answers.
     chunks = []
     step = CHUNK_SIZE - CHUNK_OVERLAP
 

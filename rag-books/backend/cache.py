@@ -6,7 +6,7 @@ unavailable the app degrades gracefully (DB/Qdrant/OpenAI called directly).
 import json
 import redis
 
-from backend.config import REDIS_HOST, REDIS_PORT
+from backend.config import REDIS_HOST, REDIS_PORT # this whole function is new, added caching to llm.py
 
 _client: redis.Redis | None = None
 
