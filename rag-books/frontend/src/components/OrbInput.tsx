@@ -26,6 +26,8 @@ const PLACEHOLDERS = [
   'Trace how power corrupts the pigs throughout Animal Farm.',
   'What does the ice-nine symbolise in Cat\'s Cradle?',
   'Find the scene where Pip first feels ashamed of Joe.',
+  'Explain the symbolism in The Great Gatsby.',
+  'Summarise the concept of existentialism in The Stranger.',
   'Why does Kurtz say "the horror" — what did he see?',
   'How many times is the word "free" used in The Communist Manifesto?',
   'What chapter does Santiago first spot the marlin?',
