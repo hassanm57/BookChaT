@@ -92,7 +92,11 @@ export default function OrbInput() {
             } else {
               clearInterval(intervalRef.current!)
               intervalRef.current = null
-              setPlaceholderIndex(p => (p + 1) % placeholders.length)
+              setPlaceholderIndex(p => {
+                let next
+                do { next = Math.floor(Math.random() * placeholders.length) } while (next === p)
+                return next
+              })
             }
           }, ERASE_DELAY)
         }, IDLE_DELAY)
