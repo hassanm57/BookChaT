@@ -68,6 +68,9 @@ def inspect(query: str, book_id: str, generate_answer: bool = False) -> None:
         {
             "text":        r.payload["text"],
             "page_number": r.payload["page_number"],
+            "book_id":     r.payload.get("book_id", book_id),
+            "title":       r.payload.get("title", book_id),
+            "char_offset": r.payload.get("char_offset", 0),
             "dense_score": r.score,
             "dense_rank":  i + 1,
         }
