@@ -40,6 +40,6 @@ def get_current_user(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
     except jwt.PyJWTError as exc:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
+            status_code=status.HTTP_401_UNAUTHORIZED, # throw 401 error if token is invalid or expired
+            detail="Invalid token", 
         ) from exc
