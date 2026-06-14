@@ -105,7 +105,7 @@ def main() -> None:
         print("  Extracting text...")
         pages = extract_pages(pdf_path)
 
-        print("  Chunking...")
+        print("  Chunking text...")
         chunks = chunk_text(pages, book_id)
         print(f"  {len(chunks)} chunks created")
 
