@@ -1362,6 +1362,9 @@ a { text-decoration: none; color: inherit; }
   background: rgba(240, 235, 227, 0.85);
   backdrop-filter: blur(8px);
 }
+[data-theme="dark"] .hero-nav {
+  background: rgba(16, 14, 12, 0.88);
+}
 
 .hero-nav-logo {
   display: flex;
@@ -1419,6 +1422,32 @@ a { text-decoration: none; color: inherit; }
 .hero-nav-link:hover {
   color: var(--text-primary);
   background: rgba(0,0,0,0.05);
+}
+[data-theme="dark"] .hero-nav-link:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+/* ─── Hero navbar theme toggle ───────────────────────────────────────────── */
+.hero-theme-toggle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+.hero-theme-toggle:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-muted);
+  color: var(--text-primary);
 }
 
 .hero-nav-cta {
