@@ -43,6 +43,119 @@
   --shadow-book: 6px 6px 20px rgba(0, 0, 0, 0.6), -2px 2px 8px rgba(0, 0, 0, 0.4);
 }
 
+/* ─── Dark mode component overrides ─────────────────────────────────────── */
+
+/* OrbInput pill */
+[data-theme="dark"] .orb-input-wrap {
+  background: var(--surface);
+  border-color: rgba(255,255,255,0.1);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+}
+[data-theme="dark"] .orb-divider {
+  background: rgba(255,255,255,0.1);
+}
+
+/* Hero CTA buttons — invert to cream-on-dark so they pop */
+[data-theme="dark"] .hero-cta {
+  background: var(--text-primary);
+  color: var(--bg);
+}
+[data-theme="dark"] .hero-cta:hover {
+  background: var(--accent);
+  color: white;
+}
+[data-theme="dark"] .hero-nav-cta {
+  background: var(--text-primary);
+  color: var(--bg);
+}
+[data-theme="dark"] .hero-nav-cta:hover {
+  background: var(--accent);
+  color: white;
+}
+
+/* Feature orbit section background */
+[data-theme="dark"] .hero-features-section {
+  background: rgba(255,255,255,0.02);
+}
+/* Orbit ring */
+[data-theme="dark"] .fo-ring {
+  border-color: rgba(255,255,255,0.08);
+}
+/* Orbit node icons — dark warm tone instead of cream */
+[data-theme="dark"] .fo-node-icon {
+  background: #28211a;
+  border-color: rgba(255,255,255,0.13);
+  color: var(--text-primary);
+}
+[data-theme="dark"] .fo-node:hover .fo-node-icon {
+  background: #352b21;
+  border-color: rgba(255,255,255,0.22);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+/* Orbit detail card (shown in center on node click) */
+[data-theme="dark"] .fo-detail {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+/* HowItWorks section — the scatter-sec-how has a white-tinted bg */
+[data-theme="dark"] .scatter-sec-how {
+  background: rgba(255,255,255,0.025);
+}
+
+/* Bottom CTA + footer — intentionally dark in light mode; keep very dark in dark mode */
+[data-theme="dark"] .hero-bottom-cta,
+[data-theme="dark"] .scatter-sec-cta {
+  background: #0b0906;
+}
+[data-theme="dark"] .hero-footer {
+  background: #080705;
+  border-color: rgba(255,255,255,0.05);
+}
+
+/* Scroll-to-top button */
+[data-theme="dark"] .scroll-top-btn {
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.55), 0 0 0 1px var(--border);
+}
+[data-theme="dark"] .scroll-top-btn:hover {
+  background: var(--accent);
+  color: white;
+}
+
+/* FAQ items */
+[data-theme="dark"] .hero-faq-item {
+  background: var(--surface);
+}
+[data-theme="dark"] .hero-faq-item.open {
+  background: var(--bg-secondary);
+}
+
+/* Pricing cards */
+[data-theme="dark"] .pricing-card {
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+}
+[data-theme="dark"] .pricing-card:hover {
+  border-color: rgba(255,255,255,0.14);
+  box-shadow: 0 8px 36px rgba(0,0,0,0.4);
+}
+[data-theme="dark"] .pricing-card--hi {
+  background: var(--surface);
+}
+[data-theme="dark"] .pricing-toggle-label       { color: var(--text-muted); }
+[data-theme="dark"] .pricing-toggle-label.active { color: var(--text-primary); }
+[data-theme="dark"] .pricing-toggle-track        { border-color: var(--border); background: var(--bg-secondary); }
+[data-theme="dark"] .pricing-toggle-thumb        { background: var(--text-muted); }
+
+/* hero-cta--light hover — keep as accent in dark, skip white */
+[data-theme="dark"] .hero-cta--light:hover {
+  background: var(--accent-hover) !important;
+  color: white !important;
+}
+
 /* ─── Theme transition ───────────────────────────────────────────────────── */
 html.theme-transition,
 html.theme-transition *,
