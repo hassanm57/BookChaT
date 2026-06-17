@@ -43,6 +43,48 @@
   --shadow-book: 6px 6px 20px rgba(0, 0, 0, 0.6), -2px 2px 8px rgba(0, 0, 0, 0.4);
 }
 
+/* ─── Dark mode — Chat page overrides ───────────────────────────────────── */
+
+/* PDF toggle button active state */
+[data-theme="dark"] .pdf-toggle-btn.active {
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+  color: var(--bg);
+}
+
+/* User message bubble — invert to cream-on-dark */
+[data-theme="dark"] .msg-user {
+  background: var(--text-primary);
+  color: var(--bg);
+}
+
+/* Citation chips separator — rgba(0,0,0,0.07) invisible on dark bg */
+[data-theme="dark"] .citation-chips {
+  border-top-color: rgba(255,255,255,0.08);
+}
+
+/* Suggestion chip hover border — rgba(0,0,0,0.14) invisible */
+[data-theme="dark"] .chat-suggestion-chip:hover:not(:disabled) {
+  border-color: rgba(255,255,255,0.15);
+}
+
+/* Welcome screen book icon */
+[data-theme="dark"] .chat-welcome-icon {
+  background: var(--text-primary);
+  color: var(--bg);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+/* Send button */
+[data-theme="dark"] .chat-send-btn {
+  background: var(--text-primary);
+  color: var(--bg);
+}
+[data-theme="dark"] .chat-send-btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: white;
+}
+
 /* ─── Dark mode — Library overrides ─────────────────────────────────────── */
 
 /* Featured panel — white glassmorphism panel */
