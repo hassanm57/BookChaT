@@ -1412,6 +1412,10 @@ a { text-decoration: none; color: inherit; }
   line-height: 15px;
   letter-spacing: 0.04em;
   color: rgba(0, 0, 0, 0.27);
+}
+
+[data-theme="dark"] .hero-ascii-pre {
+  color: rgba(255, 255, 255, 0.13);
   white-space: pre;
   margin: 0;
   padding: 0;
