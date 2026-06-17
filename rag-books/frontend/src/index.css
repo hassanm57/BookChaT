@@ -87,6 +87,10 @@
 
 /* ─── Dark mode — Library overrides ─────────────────────────────────────── */
 
+[data-theme="dark"] .lib-nav {
+  background: rgba(16, 14, 12, 0.92);
+}
+
 /* Featured panel — white glassmorphism panel */
 [data-theme="dark"] .lib-feat {
   background: rgba(30, 26, 23, 0.85);
