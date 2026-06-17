@@ -43,7 +43,68 @@
   --shadow-book: 6px 6px 20px rgba(0, 0, 0, 0.6), -2px 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* ─── Dark mode component overrides ─────────────────────────────────────── */
+/* ─── Dark mode — Library overrides ─────────────────────────────────────── */
+
+/* Featured panel — white glassmorphism panel */
+[data-theme="dark"] .lib-feat {
+  background: rgba(30, 26, 23, 0.85);
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.35);
+}
+
+/* Featured panel CTA + arrow hover — var(--text-primary) becomes cream */
+[data-theme="dark"] .lib-feat-cta,
+[data-theme="dark"] .lib-hero-cta {
+  background: var(--text-primary);
+  color: var(--bg);
+}
+[data-theme="dark"] .lib-feat-cta:hover,
+[data-theme="dark"] .lib-hero-cta:hover {
+  background: var(--accent);
+  color: white;
+}
+[data-theme="dark"] .lib-feat-arrow:hover,
+[data-theme="dark"] .nav-arrow:hover {
+  background: var(--text-primary);
+  color: var(--bg);
+  border-color: var(--text-primary);
+}
+
+/* Skeleton shimmer — bright spot #FAF7F3 is invisible on dark bg */
+[data-theme="dark"] .skel {
+  background: linear-gradient(
+    90deg,
+    var(--bg-secondary) 0px,
+    #2e2723 80px,
+    var(--bg-secondary) 160px
+  );
+  background-size: 400px 100%;
+}
+
+/* Search dock expanded input — rgba(255,255,255,0.75) is nearly white */
+[data-theme="dark"] .esd-input-wrap {
+  background: rgba(22, 19, 17, 0.92);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+}
+
+/* Upload + Onboarding submit buttons */
+[data-theme="dark"] .upload-submit,
+[data-theme="dark"] .ob-cta {
+  background: var(--text-primary);
+  color: var(--bg);
+}
+[data-theme="dark"] .upload-submit:hover:not(:disabled),
+[data-theme="dark"] .ob-cta:hover {
+  background: var(--accent);
+  color: white;
+}
+
+/* Upload progress track — rgba(0,0,0,0.07) invisible on dark bg */
+[data-theme="dark"] .upload-progress {
+  background: rgba(255,255,255,0.08);
+}
+
+/* ─── Dark mode — Hero component overrides ───────────────────────────────── */
 
 /* OrbInput pill */
 [data-theme="dark"] .orb-input-wrap {
