@@ -139,11 +139,11 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
             </div>
             <h2 className="upload-limit-heading">You've reached the free limit</h2>
             <p className="upload-limit-body">
-              The free plan includes 1 book. Upgrade to Pro to add up to 10 books and get 30 messages per day.
+              The free plan includes 1 book. Upgrade to Pro to add up to 10 books and get 50 messages per day.
             </p>
             <div className="upload-limit-actions">
               <button className="upload-limit-cta" onClick={() => { onClose(); window.location.href = '/upgrade' }}>
-                Upgrade to Pro, $8.99/mo
+                Upgrade to Pro, $9.99/mo
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M12 5l7 7-7 7"/>
                 </svg>
@@ -728,7 +728,7 @@ export default function Library() {
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
             </svg>
             <span>
-              Free plan &mdash; <strong>{subStatus.messages_used} of {subStatus.limit}</strong> lifetime messages used
+              Free plan &mdash; <strong>{subStatus.messages_used} of {subStatus.limit}</strong> messages used
               {subStatus.messages_remaining === 0 && <> &middot; <strong>limit reached</strong></>}
             </span>
           </div>

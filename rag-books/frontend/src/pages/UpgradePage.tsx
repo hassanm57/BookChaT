@@ -4,16 +4,66 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { submitUpgradeRequest } from '../api'
 
-// ─── FILL IN YOUR NAYAPAY DETAILS HERE ────────────────────────────────────────
-// Find these in NayaPay app → Menu → Account Details
-const NAYAPAY_ACCOUNT_NAME = 'Hassan Mansoor'   // your name as registered
-const NAYAPAY_IBAN = 'PK55NAYA1234503325560873' // replace with your real IBAN
-const NAYAPAY_SWIFT = 'MCIBPKKA'                // MCB Islamic Bank (NayaPay partner) — fixed
+const NAYAPAY_ACCOUNT_NAME = 'Hassan Mansoor'
+const NAYAPAY_IBAN = 'PK55NAYA1234503325560873'
+const NAYAPAY_SWIFT = 'MCIBPKKA'
 const NAYAPAY_BANK = 'MCB Islamic Bank (NayaPay)'
-// ──────────────────────────────────────────────────────────────────────────────
+
+const PRICE_USD = 9.99
+
+interface Country {
+  name: string
+  currency: string
+  symbol: string
+  flag: string
+}
+
+const COUNTRIES: Country[] = [
+  { name: 'United States',  currency: 'USD', symbol: '$',    flag: '🇺🇸' },
+  { name: 'United Kingdom', currency: 'GBP', symbol: '£',    flag: '🇬🇧' },
+  { name: 'Germany',        currency: 'EUR', symbol: '€',    flag: '🇩🇪' },
+  { name: 'France',         currency: 'EUR', symbol: '€',    flag: '🇫🇷' },
+  { name: 'Netherlands',    currency: 'EUR', symbol: '€',    flag: '🇳🇱' },
+  { name: 'Spain',          currency: 'EUR', symbol: '€',    flag: '🇪🇸' },
+  { name: 'Italy',          currency: 'EUR', symbol: '€',    flag: '🇮🇹' },
+  { name: 'Canada',         currency: 'CAD', symbol: 'CA$',  flag: '🇨🇦' },
+  { name: 'Australia',      currency: 'AUD', symbol: 'A$',   flag: '🇦🇺' },
+  { name: 'New Zealand',    currency: 'NZD', symbol: 'NZ$',  flag: '🇳🇿' },
+  { name: 'Switzerland',    currency: 'CHF', symbol: 'CHF',  flag: '🇨🇭' },
+  { name: 'Sweden',         currency: 'SEK', symbol: 'kr',   flag: '🇸🇪' },
+  { name: 'Norway',         currency: 'NOK', symbol: 'kr',   flag: '🇳🇴' },
+  { name: 'Denmark',        currency: 'DKK', symbol: 'kr',   flag: '🇩🇰' },
+  { name: 'India',          currency: 'INR', symbol: '₹',    flag: '🇮🇳' },
+  { name: 'UAE',            currency: 'AED', symbol: 'AED',  flag: '🇦🇪' },
+  { name: 'Singapore',      currency: 'SGD', symbol: 'S$',   flag: '🇸🇬' },
+  { name: 'Malaysia',       currency: 'MYR', symbol: 'RM',   flag: '🇲🇾' },
+  { name: 'Nigeria',        currency: 'NGN', symbol: '₦',    flag: '🇳🇬' },
+  { name: 'South Africa',   currency: 'ZAR', symbol: 'R',    flag: '🇿🇦' },
+  { name: 'Brazil',         currency: 'BRL', symbol: 'R$',   flag: '🇧🇷' },
+  { name: 'Japan',          currency: 'JPY', symbol: '¥',    flag: '🇯🇵' },
+  { name: 'South Korea',    currency: 'KRW', symbol: '₩',    flag: '🇰🇷' },
+  { name: 'Bangladesh',     currency: 'BDT', symbol: '৳',    flag: '🇧🇩' },
+  { name: 'Other',          currency: 'USD', symbol: '$',    flag: '🌍' },
+]
+
+// Fallback rates (USD → foreign) used if live fetch fails
+const FALLBACK_RATES: Record<string, number> = {
+  USD: 1, GBP: 0.792, EUR: 0.925, CAD: 1.370, AUD: 1.545,
+  NZD: 1.643, CHF: 0.898, SEK: 10.52, NOK: 10.61, DKK: 6.89,
+  INR: 83.50, AED: 3.673, SGD: 1.345, MYR: 4.71, NGN: 1625,
+  ZAR: 18.45, BRL: 5.08, JPY: 154.2, KRW: 1332, BDT: 109.5,
+}
+
+const NO_DECIMAL_CURRENCIES = new Set(['JPY', 'KRW', 'IDR'])
+
+function formatConverted(amount: number, currency: string, symbol: string): string {
+  const value = NO_DECIMAL_CURRENCIES.has(currency)
+    ? Math.round(amount).toLocaleString()
+    : amount.toFixed(2)
+  return `${symbol}${value}`
+}
 
 const TRANSFER_METHODS = ['Wise', 'Remitly', 'WorldRemit', 'Western Union', 'Other']
-const COUNTRIES = ['United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France', 'UAE', 'Other']
 
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false)
@@ -58,12 +108,14 @@ export default function UpgradePage() {
   const navigate = useNavigate()
   const { user } = useAuth()
 
+  const [country, setCountry] = useState('')
+  const [rates, setRates] = useState<Record<string, number>>(FALLBACK_RATES)
+  const [ratesLive, setRatesLive] = useState(false)
   const [form, setForm] = useState({
     name: '',
-    country: '',
     transfer_method: '',
     transaction_ref: '',
-    amount_sent: '8.99',
+    amount_sent: String(PRICE_USD),
     notes: '',
   })
   const [screenshot, setScreenshot] = useState<File | null>(null)
@@ -73,6 +125,20 @@ export default function UpgradePage() {
   const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
+  // Fetch live exchange rates from open.er-api.com (free, no key required)
+  useEffect(() => {
+    fetch('https://open.er-api.com/v6/latest/USD')
+      .then(r => r.json())
+      .then(d => {
+        if (d.rates && typeof d.rates === 'object') {
+          setRates(d.rates)
+          setRatesLive(true)
+        }
+      })
+      .catch(() => {}) // silently fall back to FALLBACK_RATES
+  }, [])
+
+  // Overflow fix
   useEffect(() => {
     document.body.style.overflow = 'auto'
     document.documentElement.style.overflow = 'auto'
@@ -88,6 +154,24 @@ export default function UpgradePage() {
       if (root) { root.style.height = ''; root.style.overflow = '' }
     }
   }, [])
+
+  // Derived currency info
+  const selectedCountry = COUNTRIES.find(c => c.name === country)
+  const currencyCode = selectedCountry?.currency ?? 'USD'
+  const currencySymbol = selectedCountry?.symbol ?? '$'
+  const rate = rates[currencyCode] ?? 1
+  const convertedRaw = PRICE_USD * rate
+  const convertedFormatted = formatConverted(convertedRaw, currencyCode, currencySymbol)
+  const isNonUSD = currencyCode !== 'USD'
+
+  // Auto-fill amount when country or rates change
+  useEffect(() => {
+    if (!country) return
+    const val = NO_DECIMAL_CURRENCIES.has(currencyCode)
+      ? String(Math.round(convertedRaw))
+      : convertedRaw.toFixed(2)
+    setForm(f => ({ ...f, amount_sent: val }))
+  }, [country, rates]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFile = (file: File) => {
     setScreenshot(file)
@@ -106,7 +190,7 @@ export default function UpgradePage() {
     e.preventDefault()
     if (!screenshot) { setError('Please attach a screenshot of your payment.'); return }
     if (!form.name.trim()) { setError('Please enter your name.'); return }
-    if (!form.country) { setError('Please select your country.'); return }
+    if (!country) { setError('Please select your country using the selector on the left.'); return }
     if (!form.transfer_method) { setError('Please select your transfer method.'); return }
     if (!form.transaction_ref.trim()) { setError('Please enter your transaction reference.'); return }
 
@@ -115,10 +199,10 @@ export default function UpgradePage() {
     try {
       const fd = new FormData()
       fd.append('name', form.name)
-      fd.append('country', form.country)
+      fd.append('country', country)
       fd.append('transfer_method', form.transfer_method)
       fd.append('transaction_ref', form.transaction_ref)
-      fd.append('amount_sent', form.amount_sent)
+      fd.append('amount_sent', `${form.amount_sent} ${currencyCode}`)
       fd.append('notes', form.notes)
       fd.append('screenshot', screenshot)
       await submitUpgradeRequest(fd)
@@ -154,7 +238,7 @@ export default function UpgradePage() {
             <h2 className="upg-success-title">Request received</h2>
             <p className="upg-success-body">
               We'll verify your payment and activate your Pro account within 24 hours.
-              You'll be able to chat with up to 10 books and 25 messages per day.
+              You'll be able to chat with up to 10 books and 50 messages per day.
             </p>
             <button className="upg-success-cta" onClick={() => navigate('/library')}>
               Back to library
@@ -167,7 +251,6 @@ export default function UpgradePage() {
 
   return (
     <div className="upg-page">
-      {/* Nav */}
       <nav className="upg-nav">
         <button className="upg-nav-logo" onClick={() => navigate('/')}>
           <img src="/logo.png" alt="Folio" className="hero-nav-logo-img" />
@@ -189,15 +272,70 @@ export default function UpgradePage() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
+          {/* Country selector — top of left panel */}
+          <div className="upg-country-row">
+            <label className="upg-country-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+              Sending from
+            </label>
+            <select
+              className="upg-country-picker"
+              value={country}
+              onChange={e => setCountry(e.target.value)}
+            >
+              <option value="">Select your country</option>
+              {COUNTRIES.map(c => (
+                <option key={c.name} value={c.name}>{c.flag} {c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Live currency conversion display */}
+          <AnimatePresence>
+            {country && (
+              <motion.div
+                className="upg-currency-display"
+                initial={{ opacity: 0, y: -8, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                exit={{ opacity: 0, y: -8, height: 0 }}
+                transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <div className="upg-currency-amount-row">
+                  <span className="upg-currency-usd">${PRICE_USD} USD</span>
+                  {isNonUSD && (
+                    <>
+                      <span className="upg-currency-eq">≈</span>
+                      <span className="upg-currency-converted">{convertedFormatted}</span>
+                      <span className="upg-currency-code">{currencyCode}</span>
+                    </>
+                  )}
+                </div>
+                {isNonUSD && (
+                  <p className="upg-currency-note">
+                    {ratesLive ? 'Live rate · ' : 'Approximate rate · '}
+                    send in {currencyCode} via Wise or Remitly
+                  </p>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <div className="upg-info-badge">Upgrade to Pro</div>
           <h1 className="upg-info-heading">
             More books.<br />
             <span className="upg-info-italic">More conversations.</span>
           </h1>
           <p className="upg-info-sub">
-            Send <strong>$8.99</strong> via bank transfer to the account below,
-            then submit the form with your transaction screenshot.
-            We'll activate your account within 24 hours.
+            Send EXACTLY{' '}
+            {isNonUSD && country
+              ? <><strong>{convertedFormatted} {currencyCode}</strong> (≈ ${PRICE_USD}) </>
+              : <><strong>${PRICE_USD}</strong> </>
+            }
+            via bank transfer to the account below, then submit the form with your transaction screenshot.
+            We'll activate your account within 24 hours. If EXACT amount is not sent, your account will not be upgraded. 
           </p>
 
           {/* Plan comparison */}
@@ -205,13 +343,13 @@ export default function UpgradePage() {
             <div className="upg-compare-col">
               <div className="upg-compare-label">Free</div>
               <div className="upg-compare-item dim">1 book</div>
-              <div className="upg-compare-item dim">10 messages / day</div>
+              <div className="upg-compare-item dim">10 messages lifetime</div>
             </div>
             <div className="upg-compare-arrow">→</div>
             <div className="upg-compare-col upg-compare-col--pro">
-              <div className="upg-compare-label pro">Pro · $8.99/mo</div>
+              <div className="upg-compare-label pro">Pro · $9.99/mo</div>
               <div className="upg-compare-item">10 books</div>
-              <div className="upg-compare-item">25 messages / day</div>
+              <div className="upg-compare-item">50 messages / day</div>
             </div>
           </div>
 
@@ -227,17 +365,20 @@ export default function UpgradePage() {
             <BankDetail label="IBAN" value={NAYAPAY_IBAN} />
             <BankDetail label="SWIFT / BIC" value={NAYAPAY_SWIFT} />
             <BankDetail label="Bank" value={NAYAPAY_BANK} />
-            <BankDetail label="Amount" value="$8.99 USD" />
+            <BankDetail
+              label="Amount"
+              value={isNonUSD && country ? `${convertedFormatted} ${currencyCode} (≈ $${PRICE_USD} USD)` : `$${PRICE_USD} USD`}
+            />
           </div>
 
           {/* Transfer instructions */}
           <div className="upg-instructions">
-            <div className="upg-instructions-title">How to send from the US or UK</div>
+            <div className="upg-instructions-title">How to send via Wise</div>
             <div className="upg-step-list">
               {[
-                { n: '1', text: 'Go to wise.com (cheapest option, ~1% fee, arrives in 1–2 days)' },
+                { n: '1', text: 'Go to wise.com — the cheapest option (~1% fee, arrives in 1–2 days)' },
                 { n: '2', text: 'Click "Send money" → choose Pakistan as destination' },
-                { n: '3', text: 'Enter the IBAN and account name above, send $8.99 USD' },
+                { n: '3', text: `Enter the IBAN and account name above, send ${isNonUSD && country ? `${convertedFormatted} ${currencyCode}` : `$${PRICE_USD} USD`}` },
                 { n: '4', text: 'Save your transaction reference number' },
                 { n: '5', text: 'Take a screenshot of the confirmation and submit the form' },
               ].map(s => (
@@ -274,6 +415,15 @@ export default function UpgradePage() {
               </div>
             )}
 
+            {!country && (
+              <div className="upg-form-country-hint">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                Select your country on the left to see the exact amount to send.
+              </div>
+            )}
+
             <form className="upg-form" onSubmit={handleSubmit}>
               <div className="upg-field">
                 <label className="upg-label">Full name</label>
@@ -284,19 +434,6 @@ export default function UpgradePage() {
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   required
                 />
-              </div>
-
-              <div className="upg-field">
-                <label className="upg-label">Your country</label>
-                <select
-                  className="upg-input upg-select"
-                  value={form.country}
-                  onChange={e => setForm(f => ({ ...f, country: e.target.value }))}
-                  required
-                >
-                  <option value="">Select country</option>
-                  {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
               </div>
 
               <div className="upg-field">
@@ -324,7 +461,10 @@ export default function UpgradePage() {
               </div>
 
               <div className="upg-field">
-                <label className="upg-label">Amount sent (USD)</label>
+                <label className="upg-label">
+                  Amount sent
+                  {country && <span className="upg-label-currency"> ({currencyCode})</span>}
+                </label>
                 <input
                   className="upg-input"
                   value={form.amount_sent}

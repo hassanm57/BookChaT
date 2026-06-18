@@ -11,7 +11,7 @@ const FREE_FEATURES = [
 
 const PRO_FEATURES = [
   'Up to 10 books',
-  '30 messages per day',
+  '50 messages per day',
   'Full PDF viewer',
   'Clickable page citations',
   'Priority email support',
@@ -83,7 +83,7 @@ export default function Pricing() {
 
           <div className="pricing-price-row">
             <span className="pricing-currency">$</span>
-            <span className="pricing-price-num">8.99</span>
+            <span className="pricing-price-num">9.99</span>
             <span className="pricing-per-mo">/mo</span>
           </div>
           <p className="pricing-billed-note">Billed monthly · Cancel anytime</p>

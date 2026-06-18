@@ -39,7 +39,7 @@ ADMIN_SECRET = os.getenv("ADMIN_SECRET", "")
 ADMIN_EMAIL = "hassanmansoor1569@gmail.com"
 
 FREE_LIFETIME_LIMIT = 10   # total messages ever on free plan — no reset
-PRO_DAILY_LIMIT = 30       # messages per UTC day on pro plan
+PRO_DAILY_LIMIT = 50       # messages per UTC day on pro plan
 
 
 def _count_lifetime_messages(user_id: str) -> int:
@@ -336,7 +336,7 @@ async def chat(request: Request, body: ChatRequest, user_id: str = Depends(get_c
                 status_code=429,
                 detail={
                     "code": "LIFETIME_LIMIT",
-                    "message": f"You've used all {limit} free messages. Upgrade to Pro for 30 messages per day.",
+                    "message": f"You've used all {limit} free messages. Upgrade to Pro for 50 messages per day.",
                     "is_pro": False,
                     "limit": limit,
                 },
