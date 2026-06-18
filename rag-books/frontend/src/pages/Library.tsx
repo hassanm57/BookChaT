@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef, useCallback, Fragment } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { fetchBooks, fetchBook, uploadBook, extractMetadata, deleteBook, UploadLimitError } from '../api'
@@ -356,32 +356,37 @@ function LibrarySkeleton() {
 // ─── Empty State ──────────────────────────────────────────────────────────────
 const EMPTY_STEPS = [
   {
-    n: '01',
-    title: 'Upload any PDF',
-    body: 'Textbooks, research papers, novels: anything up to 50 MB.',
+    key: 'upload',
+    title: 'Drop any PDF',
+    body: 'Textbooks, novels, research papers. Anything up to 50 MB.',
     icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="12" y1="18" x2="12" y2="12"/>
+        <polyline points="9 15 12 12 15 15"/>
       </svg>
     ),
   },
   {
-    n: '02',
-    title: 'We process it',
-    body: 'Folio reads every page of your document. Usually done in under a minute.',
+    key: 'process',
+    title: 'Sit back',
+    body: 'Folio reads every page automatically. Usually done in under a minute.',
     icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
       </svg>
     ),
   },
   {
-    n: '03',
-    title: 'Chat with citations',
-    body: 'Ask anything. Every answer includes clickable page citations.',
+    key: 'chat',
+    title: 'Ask anything',
+    body: 'Every answer links directly to the page it came from.',
     icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        <line x1="9" y1="9" x2="15" y2="9"/>
+        <line x1="9" y1="13" x2="13" y2="13"/>
       </svg>
     ),
   },
@@ -412,20 +417,25 @@ function EmptyState({ onUpload }: { onUpload: () => void }) {
 
       <div className="lib-empty-steps">
         {EMPTY_STEPS.map((step, i) => (
-          <motion.div
-            key={step.n}
-            className="lib-empty-step"
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.15 + i * 0.08 }}
-          >
-            <div className="lib-empty-step-icon">{step.icon}</div>
-            <div>
-              <span className="lib-empty-step-n">{step.n}</span>
+          <Fragment key={step.key}>
+            <motion.div
+              className="lib-empty-step"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.15 + i * 0.08 }}
+            >
+              <div className="lib-empty-step-icon">{step.icon}</div>
               <h4 className="lib-empty-step-title">{step.title}</h4>
               <p className="lib-empty-step-body">{step.body}</p>
-            </div>
-          </motion.div>
+            </motion.div>
+            {i < EMPTY_STEPS.length - 1 && (
+              <div className="lib-empty-step-sep" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </div>
+            )}
+          </Fragment>
         ))}
       </div>
     </motion.div>
