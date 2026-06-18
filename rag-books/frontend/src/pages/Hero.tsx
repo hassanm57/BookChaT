@@ -356,7 +356,9 @@ export default function Hero() {
 
       {/* Footer */}
       <footer className="hero-footer">
-        <span className="hero-footer-copy">© 2026 BookChat - made by hassanM57</span>
+        <span className="hero-footer-copy">© 2026 Folio</span>
+        <span className="hero-footer-sep">·</span>
+        <a className="hero-footer-link" onClick={() => navigate('/privacy')}>Privacy Policy</a>
       </footer>
     </div>
     </ReactLenis>

@@ -8,6 +8,7 @@ import Signup from './pages/Signup'
 import Library from './pages/Library'
 import Chat from './pages/Chat'
 import PricingPage from './pages/PricingPage'
+import PrivacyPage from './pages/PrivacyPage'
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
           <Route path="/chat/:bookId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
         </Routes>
