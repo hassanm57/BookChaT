@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { fetchBook, fetchPdfUrl } from '../api'
+import { fetchBook, fetchPdfUrl, getSubscriptionStatus } from '../api'
 import { useTheme } from '../contexts/ThemeContext'
 import type { Book } from '../types'
 import ChatPanel from '../components/ChatPanel'
@@ -133,6 +133,7 @@ export default function Chat() {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [pdfUrlReady, setPdfUrlReady] = useState(false)
   const [showPdf, setShowPdf] = useState(true)
+  const [isPro, setIsPro] = useState(false)
   const pdfViewerRef = useRef<PdfViewerHandle>(null)
 
   useEffect(() => {
@@ -144,6 +145,7 @@ export default function Chat() {
       .then(setPdfUrl)
       .catch(() => {})
       .finally(() => setPdfUrlReady(true))
+    getSubscriptionStatus().then(s => setIsPro(s.is_pro)).catch(() => {})
   }, [bookId, navigate])
 
   const handleCitationClick = (page: number) => {
@@ -172,6 +174,19 @@ export default function Chat() {
         <span className="topbar-title">{book.title}</span>
         <span className="topbar-author">by {book.author}</span>
         <div className="topbar-spacer" />
+        {isPro && (
+          <motion.span
+            className="pro-badge"
+            initial={{ opacity: 0, scale: 0.75 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            Pro
+          </motion.span>
+        )}
         <button
           className="topbar-theme-btn"
           onClick={() => setShowContact(true)}

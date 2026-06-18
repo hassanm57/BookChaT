@@ -664,6 +664,20 @@ export default function Library() {
             <UploadIcon />
           </button>
 
+          {subStatus?.is_pro && (
+            <motion.span
+              className="pro-badge"
+              initial={{ opacity: 0, scale: 0.75 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              Pro
+            </motion.span>
+          )}
+
           <div className="lib-user-menu" ref={menuRef}>
             <button
               className={`lib-user-avatar${showUserMenu ? ' lib-user-avatar--open' : ''}`}
