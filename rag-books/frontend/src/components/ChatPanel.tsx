@@ -38,6 +38,7 @@ interface Message {
   content: string
   citations?: Citation[]
   followUps?: string[]
+  isError?: boolean
 }
 
 interface Props {
@@ -251,7 +252,20 @@ export default function ChatPanel({ bookId, bookTitle, bookAuthor, bookGenre, on
         body: JSON.stringify({ book_id: bookId, query: text }),
       })
 
-      if (!res.ok || !res.body) throw new Error('Request failed')
+      if (!res.ok || !res.body) {
+        const json = await res.json().catch(() => null)
+        const detail = json?.detail
+        const msg = typeof detail === 'object' && detail?.message
+          ? detail.message
+          : res.status === 503
+            ? 'Search is temporarily unavailable. Please try again in a moment.'
+            : res.status === 429
+              ? 'You\'re sending messages too fast. Wait a moment and try again.'
+              : res.status === 404
+                ? 'No relevant passages found. Try rephrasing your question.'
+                : 'Something went wrong. Please try again.'
+        throw new Error(msg)
+      }
 
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
@@ -291,6 +305,12 @@ export default function ChatPanel({ bookId, bookTitle, bookAuthor, bookGenre, on
               setMessages(prev => {
                 const msgs = [...prev]
                 msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], followUps: event.questions }
+                return msgs
+              })
+            } else if (event.type === 'error') {
+              setMessages(prev => {
+                const msgs = [...prev]
+                msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], content: event.message ?? 'Something went wrong. Please try again.', isError: true }
                 return msgs
               })
             }
@@ -350,7 +370,7 @@ export default function ChatPanel({ bookId, bookTitle, bookAuthor, bookGenre, on
                   }
                 </div>
               )}
-              <div className={`msg-bubble msg-${msg.role}`}>
+              <div className={`msg-bubble msg-${msg.role}${msg.isError ? ' msg-error' : ''}`}>
               {msg.content || (streaming && i === messages.length - 1
                 ? <span className="typing-dots"><span /><span /><span /></span>
                 : null

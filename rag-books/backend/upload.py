@@ -13,12 +13,14 @@ Background task:
 7. Update book record: status='ready', cover_image=<url>
 """
 
+import logging
 import os
 import tempfile
 from pathlib import Path
 from uuid import uuid4
 
 import fitz
+import httpx
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Request, UploadFile
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
@@ -30,6 +32,10 @@ from backend.config import QDRANT_COLLECTION, QDRANT_HOST, QDRANT_PORT
 from backend.embedder import embed_chunks
 from backend.rate_limiter import limiter
 from backend.supabase_client import get_supabase
+
+logger = logging.getLogger(__name__)
+
+FREE_TIER_BOOK_LIMIT = 3
 
 router = APIRouter()
 
@@ -85,6 +91,38 @@ def _upsert_chunks(client: QdrantClient, chunks: list[dict], title: str, author:
         client.upsert(collection_name=QDRANT_COLLECTION, points=points)
 
 
+def _send_ready_email(user_id: str, title: str) -> None:
+    resend_key = os.environ.get("RESEND_API_KEY")
+    if not resend_key:
+        return
+    try:
+        sb = get_supabase()
+        user_resp = sb.auth.admin.get_user_by_id(user_id)
+        email = user_resp.user.email if user_resp.user else None
+        if not email:
+            return
+        app_url = os.environ.get("APP_URL", "https://getfolio.app")
+        httpx.post(
+            "https://api.resend.com/emails",
+            headers={"Authorization": f"Bearer {resend_key}", "Content-Type": "application/json"},
+            json={
+                "from": "Folio <noreply@getfolio.app>",
+                "to": [email],
+                "subject": f"“{title}” is ready to chat",
+                "html": (
+                    f"<p>Hi,</p>"
+                    f"<p>Your book <strong>{title}</strong> has finished processing and is ready to chat with.</p>"
+                    f"<p><a href=\"{app_url}/library\">Open your library →</a></p>"
+                    f"<p style=\"color:#888;font-size:12px;\">You’re receiving this because you uploaded a PDF to Folio. "
+                    f"<a href=\"{app_url}/privacy\">Privacy Policy</a></p>"
+                ),
+            },
+            timeout=10,
+        )
+    except Exception:
+        logger.exception("Failed to send ready email for book %s", book_id)
+
+
 def _run_ingest(book_id: str, data: bytes, title: str, author: str, user_id: str) -> None:
     sb = get_supabase()
     try:
@@ -127,6 +165,7 @@ def _run_ingest(book_id: str, data: bytes, title: str, author: str, user_id: str
         sb.table("books").update(update).eq("book_id", book_id).execute()
         # Bust stale cache so Library sees status=ready and cover_image immediately
         cache_del(f"books:{user_id}", f"book:{user_id}:{book_id}")
+        _send_ready_email(user_id, title)
 
     except Exception:
         sb.table("books").update({"status": "error"}).eq("book_id", book_id).execute()
@@ -148,6 +187,24 @@ async def upload_book(
     _validate_pdf(data)
 
     sb = get_supabase()
+
+    # Enforce free tier limit before doing any work
+    count_result = (
+        sb.table("books")
+        .select("book_id", count="exact")
+        .eq("user_id", user_id)
+        .execute()
+    )
+    book_count = count_result.count or 0
+    if book_count >= FREE_TIER_BOOK_LIMIT:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "FREE_TIER_LIMIT",
+                "message": f"Free plan includes up to {FREE_TIER_BOOK_LIMIT} books. Upgrade to Pro for unlimited uploads.",
+            },
+        )
+
     _ensure_buckets(sb)
     book_id = str(uuid4())
     safe_filename = f"{book_id}.pdf"

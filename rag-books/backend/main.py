@@ -209,9 +209,19 @@ async def chat(request: Request, body: ChatRequest, user_id: str = Depends(get_c
     if not result.data:
         raise HTTPException(status_code=403, detail="Book not found or access denied")
 
-    chunks = retrieve(body.query, body.book_id)
+    try:
+        chunks = retrieve(body.query, body.book_id, user_id=user_id)
+    except Exception:
+        raise HTTPException(
+            status_code=503,
+            detail={"code": "RETRIEVAL_UNAVAILABLE", "message": "Search is temporarily unavailable. Please try again in a moment."},
+        )
+
     if not chunks:
-        raise HTTPException(status_code=404, detail="No relevant passages found")
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "NO_RESULTS", "message": "No relevant passages found for that question. Try rephrasing or asking about a different topic."},
+        )
 
     return StreamingResponse(
         generate(body.query, chunks),

@@ -15,6 +15,7 @@ import json
 import os
 from typing import AsyncGenerator
 
+import openai
 from openai import AsyncOpenAI
 
 from backend.cache import cache_get, cache_set
@@ -83,16 +84,29 @@ async def generate(query: str, chunks: list[dict]) -> AsyncGenerator[str, None]:
     ]
 
     full_response = ""
-    stream = await client.chat.completions.create(
-        model="gpt-5.4-mini",
-        messages=messages,
-        stream=True,
-    )
-    async for chunk in stream:
-        delta = chunk.choices[0].delta.content
-        if delta:
-            full_response += delta
-            yield f"data: {json.dumps({'type': 'token', 'content': delta})}\n\n"
+    try:
+        stream = await client.chat.completions.create(
+            model="gpt-5.4-mini",
+            messages=messages,
+            stream=True,
+        )
+        async for chunk in stream:
+            delta = chunk.choices[0].delta.content
+            if delta:
+                full_response += delta
+                yield f"data: {json.dumps({'type': 'token', 'content': delta})}\n\n"
+    except openai.RateLimitError:
+        yield f"data: {json.dumps({'type': 'error', 'code': 'RATE_LIMIT', 'message': 'Too many requests to the AI service. Please wait a moment and try again.'})}\n\n"
+        yield "data: [DONE]\n\n"
+        return
+    except openai.APIConnectionError:
+        yield f"data: {json.dumps({'type': 'error', 'code': 'AI_UNAVAILABLE', 'message': 'The AI service is temporarily unavailable. Please try again in a moment.'})}\n\n"
+        yield "data: [DONE]\n\n"
+        return
+    except Exception:
+        yield f"data: {json.dumps({'type': 'error', 'code': 'AI_ERROR', 'message': 'Something went wrong generating a response. Please try again.'})}\n\n"
+        yield "data: [DONE]\n\n"
+        return
 
     sources = [
         {

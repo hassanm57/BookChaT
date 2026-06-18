@@ -1,6 +1,15 @@
 import { supabase } from './lib/supabase'
 import type { Book } from './types'
 
+export class UploadLimitError extends Error {
+  code: string
+  constructor(message: string) {
+    super(message)
+    this.name = 'UploadLimitError'
+    this.code = 'FREE_TIER_LIMIT'
+  }
+}
+
 async function authHeaders(): Promise<HeadersInit> {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return { 'Content-Type': 'application/json' }
@@ -59,8 +68,12 @@ export async function uploadBook(file: File, title: string, author: string, genr
     body: form,
   })
   if (!res.ok) {
-    const detail = await res.json().catch(() => ({ detail: 'Upload failed' }))
-    throw new Error(detail.detail ?? 'Upload failed')
+    const json = await res.json().catch(() => null)
+    const detail = json?.detail
+    if (res.status === 403 && typeof detail === 'object' && detail?.code === 'FREE_TIER_LIMIT') {
+      throw new UploadLimitError(detail.message ?? 'Free plan limit reached.')
+    }
+    throw new Error(typeof detail === 'string' ? detail : 'Upload failed')
   }
   return res.json()
 }

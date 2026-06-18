@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { fetchBooks, fetchBook, uploadBook, extractMetadata } from '../api'
+import { fetchBooks, fetchBook, uploadBook, extractMetadata, UploadLimitError } from '../api'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import type { Book } from '../types'
@@ -44,6 +44,7 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
   const [genre, setGenre] = useState('')
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+  const [limitReached, setLimitReached] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const animTimer = useRef<number>()
@@ -102,7 +103,11 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
       onUploaded(book)
       onClose()
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Upload failed.')
+      if (err instanceof UploadLimitError) {
+        setLimitReached(true)
+      } else {
+        setError(err instanceof Error ? err.message : 'Upload failed.')
+      }
       setUploading(false)
     }
   }
@@ -124,6 +129,30 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
         onClick={e => e.stopPropagation()}
         layout
       >
+        {limitReached ? (
+          <div className="upload-limit-screen">
+            <div className="upload-limit-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
+            </div>
+            <h2 className="upload-limit-heading">You've reached the free limit</h2>
+            <p className="upload-limit-body">
+              The free plan includes up to 3 books. Upgrade to Pro for unlimited uploads, larger PDFs, and priority processing.
+            </p>
+            <div className="upload-limit-actions">
+              <button className="upload-limit-cta" onClick={() => { onClose(); window.location.href = '/pricing' }}>
+                Upgrade to Pro — $4.99/mo
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </button>
+              <button className="upload-limit-dismiss" onClick={onClose}>Maybe later</button>
+            </div>
+          </div>
+        ) : (
+        <>
         <div className="upload-modal-header">
           <h2 className="upload-modal-title">Add a book</h2>
           <button className="upload-modal-close" onClick={onClose}>
@@ -239,6 +268,8 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
             </button>
           )}
         </form>
+        </>
+        )}
       </motion.div>
     </motion.div>
   )
@@ -323,26 +354,80 @@ function LibrarySkeleton() {
 }
 
 // ─── Empty State ──────────────────────────────────────────────────────────────
+const EMPTY_STEPS = [
+  {
+    n: '01',
+    title: 'Upload any PDF',
+    body: 'Textbooks, research papers, novels — anything up to 50 MB.',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+    ),
+  },
+  {
+    n: '02',
+    title: 'We process it',
+    body: 'Folio chunks and embeds your document. Usually done in under a minute.',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+    ),
+  },
+  {
+    n: '03',
+    title: 'Chat with citations',
+    body: 'Ask anything. Every answer includes clickable page citations.',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+    ),
+  },
+]
+
 function EmptyState({ onUpload }: { onUpload: () => void }) {
   return (
     <motion.div
       className="lib-empty-state"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.55 }}
     >
-      <div className="lib-empty-icon">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-        </svg>
+      <div className="lib-empty-hero">
+        <div className="lib-empty-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+          </svg>
+        </div>
+        <h2 className="lib-empty-heading">Your library is empty</h2>
+        <p className="lib-empty-text">Upload a PDF and start having a conversation with it in seconds.</p>
+        <button className="lib-hero-cta lib-empty-cta" onClick={onUpload}>
+          <UploadIcon />
+          Upload your first book
+        </button>
       </div>
-      <h3 className="lib-empty-heading">Your library is empty</h3>
-      <p className="lib-empty-text">Upload your first PDF to start chatting with it.</p>
-      <button className="lib-hero-cta" onClick={onUpload}>
-        <UploadIcon />
-        Upload your first book
-      </button>
+
+      <div className="lib-empty-steps">
+        {EMPTY_STEPS.map((step, i) => (
+          <motion.div
+            key={step.n}
+            className="lib-empty-step"
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.15 + i * 0.08 }}
+          >
+            <div className="lib-empty-step-icon">{step.icon}</div>
+            <div>
+              <span className="lib-empty-step-n">{step.n}</span>
+              <h4 className="lib-empty-step-title">{step.title}</h4>
+              <p className="lib-empty-step-body">{step.body}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
     </motion.div>
   )
 }
