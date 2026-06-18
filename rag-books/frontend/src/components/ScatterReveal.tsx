@@ -4,7 +4,7 @@ const EASE = [0.25, 0.46, 0.45, 0.94] as const
 const CHAR_VP = { once: true, margin: '0px 0px -200px 0px' } as const
 const BLOCK_VP = { once: true, margin: '0px 0px -120px 0px' } as const
 
-function ScatterChar({ char, dist }: { char: string; dist: number }) {
+function ScatterChar({ char, dist }: { char: string; dist: number }) { // this function basically takes a character and its distance from the center of the line, and then it applies a motion animation to it. The animation makes the character fly in from the left or right (depending on the sign of dist) while also rotating it on the X-axis. The further the character is from the center, the more pronounced the animation. Spaces are handled specially to maintain proper spacing without animation artifacts.
   const isSpace = char === ' '
   const clamped = Math.sign(dist) * Math.min(Math.abs(dist), 15)
   return (
@@ -14,7 +14,7 @@ function ScatterChar({ char, dist }: { char: string; dist: number }) {
       whileInView={{ x: 0, rotateX: 0, opacity: 1 }}
       viewport={CHAR_VP}
       transition={{
-        duration: 0.9,
+        duration: 0.92, // alter this to make the animation faster or slower (currently set to 0.92 seconds)
         delay: Math.abs(clamped) * 0.022,
         ease: EASE,
       }}
