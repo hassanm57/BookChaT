@@ -139,11 +139,11 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
             </div>
             <h2 className="upload-limit-heading">You've reached the free limit</h2>
             <p className="upload-limit-body">
-              The free plan includes up to 3 books. Upgrade to Pro for unlimited uploads, larger PDFs, and priority processing.
+              The free plan includes 1 book. Upgrade to Pro to add up to 10 books and get 25 messages per day.
             </p>
             <div className="upload-limit-actions">
-              <button className="upload-limit-cta" onClick={() => { onClose(); window.location.href = '/pricing' }}>
-                Upgrade to Pro, $4.99/mo
+              <button className="upload-limit-cta" onClick={() => { onClose(); window.location.href = '/upgrade' }}>
+                Upgrade to Pro, $8.99/mo
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M12 5l7 7-7 7"/>
                 </svg>

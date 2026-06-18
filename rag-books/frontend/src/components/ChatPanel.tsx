@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 function ShiningText({ text }: { text: string }) {
@@ -39,6 +40,8 @@ interface Message {
   citations?: Citation[]
   followUps?: string[]
   isError?: boolean
+  isDailyLimit?: boolean
+  isPro?: boolean
 }
 
 interface Props {
@@ -201,6 +204,7 @@ const StopIcon = () => (
 )
 
 export default function ChatPanel({ bookId, bookTitle, bookAuthor, bookGenre, onCitationClick }: Props) {
+  const navigate = useNavigate()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
@@ -255,6 +259,7 @@ export default function ChatPanel({ bookId, bookTitle, bookAuthor, bookGenre, on
       if (!res.ok || !res.body) {
         const json = await res.json().catch(() => null)
         const detail = json?.detail
+        const isDailyLimit = typeof detail === 'object' && detail?.code === 'DAILY_LIMIT'
         const msg = typeof detail === 'object' && detail?.message
           ? detail.message
           : res.status === 503
@@ -264,6 +269,23 @@ export default function ChatPanel({ bookId, bookTitle, bookAuthor, bookGenre, on
               : res.status === 404
                 ? 'Nothing found on that topic. Try asking it a different way.'
                 : 'Something went wrong. Please try again.'
+        if (isDailyLimit) {
+          setMessages(prev => {
+            const msgs = [...prev]
+            msgs[msgs.length - 1] = {
+              ...msgs[msgs.length - 1],
+              content: msg,
+              isError: true,
+              isDailyLimit: true,
+              isPro: detail?.is_pro ?? false,
+            }
+            return msgs
+          })
+          setStreaming(false)
+          abortRef.current = null
+          inputRef.current?.focus()
+          return
+        }
         throw new Error(msg)
       }
 
@@ -374,6 +396,15 @@ export default function ChatPanel({ bookId, bookTitle, bookAuthor, bookGenre, on
               {msg.content || (streaming && i === messages.length - 1
                 ? <span className="typing-dots"><span /><span /><span /></span>
                 : null
+              )}
+
+              {msg.isDailyLimit && !msg.isPro && (
+                <button className="msg-upgrade-btn" onClick={() => navigate('/upgrade')}>
+                  Upgrade to Pro — $8.99/mo
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </button>
               )}
 
               {msg.citations && msg.citations.length > 0 && (

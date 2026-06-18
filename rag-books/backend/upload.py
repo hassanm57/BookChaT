@@ -32,10 +32,12 @@ from backend.config import QDRANT_COLLECTION, QDRANT_HOST, QDRANT_PORT
 from backend.embedder import embed_chunks
 from backend.rate_limiter import limiter
 from backend.supabase_client import get_supabase
+from backend.subscriptions import get_subscription
 
 logger = logging.getLogger(__name__)
 
-FREE_TIER_BOOK_LIMIT = 3
+FREE_TIER_BOOK_LIMIT = 1
+PRO_TIER_BOOK_LIMIT = 10
 
 router = APIRouter()
 
@@ -188,7 +190,9 @@ async def upload_book(
 
     sb = get_supabase()
 
-    # Enforce free tier limit before doing any work
+    # Enforce per-tier book limit before doing any work
+    sub = get_subscription(user_id)
+    book_limit = PRO_TIER_BOOK_LIMIT if sub["is_pro"] else FREE_TIER_BOOK_LIMIT
     count_result = (
         sb.table("books")
         .select("book_id", count="exact")
@@ -196,12 +200,20 @@ async def upload_book(
         .execute()
     )
     book_count = count_result.count or 0
-    if book_count >= FREE_TIER_BOOK_LIMIT:
+    if book_count >= book_limit:
+        if sub["is_pro"]:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "code": "PRO_TIER_LIMIT",
+                    "message": f"Pro plan supports up to {PRO_TIER_BOOK_LIMIT} books. Remove a book to add another.",
+                },
+            )
         raise HTTPException(
             status_code=403,
             detail={
                 "code": "FREE_TIER_LIMIT",
-                "message": f"Free plan includes up to {FREE_TIER_BOOK_LIMIT} books. Upgrade to Pro for unlimited uploads.",
+                "message": f"Free plan includes 1 book. Upgrade to Pro for up to {PRO_TIER_BOOK_LIMIT} books.",
             },
         )
 

@@ -4,6 +4,7 @@ FastAPI application entry point.
 
 import os
 import re
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -11,10 +12,11 @@ from dotenv import load_dotenv
 # Load .env before any backend modules read os.environ at import time
 load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
 
+import httpx
 import logging
 
 import fitz
-from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -30,7 +32,31 @@ from backend.rate_limiter import limiter
 from backend.retriever import retrieve
 from backend.llm import generate
 from backend.supabase_client import get_supabase
+from backend.subscriptions import get_subscription
 from backend.upload import router as upload_router
+
+ADMIN_SECRET = os.getenv("ADMIN_SECRET", "")
+ADMIN_EMAIL = "hassanmansoor1569@gmail.com"
+
+FREE_DAILY_LIMIT = 10
+PRO_DAILY_LIMIT = 25
+
+
+def _count_today_messages(user_id: str) -> int:
+    today_start = (
+        datetime.now(timezone.utc)
+        .replace(hour=0, minute=0, second=0, microsecond=0)
+        .isoformat()
+    )
+    sb = get_supabase()
+    result = (
+        sb.table("message_events")
+        .select("id", count="exact")
+        .eq("user_id", user_id)
+        .gte("created_at", today_start)
+        .execute()
+    )
+    return result.count or 0
 
 logger = logging.getLogger(__name__)
 
@@ -259,10 +285,11 @@ def delete_book(request: Request, book_id: str, user_id: str = Depends(get_curre
 
 
 @app.post("/chat")
-@limiter.limit("20/minute")
+@limiter.limit("30/minute")
 async def chat(request: Request, body: ChatRequest, user_id: str = Depends(get_current_user)):
-    # Verify ownership before retrieval
     sb = get_supabase()
+
+    # Verify book ownership
     result = (
         sb.table("books")
         .select("book_id")
@@ -272,6 +299,27 @@ async def chat(request: Request, body: ChatRequest, user_id: str = Depends(get_c
     )
     if not result.data:
         raise HTTPException(status_code=403, detail="Book not found or access denied")
+
+    # Enforce daily message quota
+    sub = get_subscription(user_id)
+    daily_limit = PRO_DAILY_LIMIT if sub["is_pro"] else FREE_DAILY_LIMIT
+    today_count = _count_today_messages(user_id)
+    if today_count >= daily_limit:
+        raise HTTPException(
+            status_code=429,
+            detail={
+                "code": "DAILY_LIMIT",
+                "message": (
+                    f"You've used all {daily_limit} messages for today. "
+                    "Your limit resets at midnight UTC."
+                ),
+                "is_pro": sub["is_pro"],
+                "limit": daily_limit,
+            },
+        )
+
+    # Record the message event before retrieval (prevents gaming by aborting)
+    sb.table("message_events").insert({"user_id": user_id}).execute()
 
     try:
         chunks = retrieve(body.query, body.book_id, user_id=user_id)
@@ -291,3 +339,176 @@ async def chat(request: Request, body: ChatRequest, user_id: str = Depends(get_c
         generate(body.query, chunks),
         media_type="text/event-stream",
     )
+
+
+@app.get("/subscription-status")
+@limiter.limit("60/minute")
+def subscription_status(request: Request, user_id: str = Depends(get_current_user)):
+    sub = get_subscription(user_id)
+    today_count = _count_today_messages(user_id)
+    daily_limit = PRO_DAILY_LIMIT if sub["is_pro"] else FREE_DAILY_LIMIT
+    return {
+        "is_pro": sub["is_pro"],
+        "status": sub["status"],
+        "messages_today": today_count,
+        "daily_limit": daily_limit,
+        "messages_remaining": max(0, daily_limit - today_count),
+    }
+
+
+@app.post("/upgrade-request")
+@limiter.limit("5/hour")
+async def upgrade_request(
+    request: Request,
+    user_id: str = Depends(get_current_user),
+    name: str = Form(...),
+    country: str = Form(...),
+    transfer_method: str = Form(...),
+    transaction_ref: str = Form(...),
+    amount_sent: str = Form(...),
+    notes: str = Form(""),
+    screenshot: UploadFile = File(...),
+):
+    sb = get_supabase()
+
+    # Get user email from auth
+    try:
+        user_data = sb.auth.admin.get_user_by_id(user_id)
+        user_email = user_data.user.email if user_data and user_data.user else "unknown"
+    except Exception:
+        user_email = "unknown"
+
+    # Upload screenshot to private bucket
+    screenshot_url = ""
+    try:
+        content = await screenshot.read()
+        raw_ext = (screenshot.filename or "screenshot.jpg").rsplit(".", 1)[-1].lower()
+        ext = raw_ext if raw_ext in ("jpg", "jpeg", "png", "gif", "webp") else "jpg"
+        path = f"proofs/{user_id}_{int(datetime.now(timezone.utc).timestamp())}.{ext}"
+
+        existing_buckets = [b.name for b in sb.storage.list_buckets()]
+        if "payment-proofs" not in existing_buckets:
+            sb.storage.create_bucket("payment-proofs", options={"public": False})
+
+        sb.storage.from_("payment-proofs").upload(
+            path, content, {"content-type": f"image/{ext}"}
+        )
+        signed = sb.storage.from_("payment-proofs").create_signed_url(
+            path, expires_in=86400 * 30
+        )
+        screenshot_url = (
+            signed.get("signedURL")
+            or (signed.get("data") or {}).get("signedUrl", "")
+        )
+    except Exception:
+        logger.exception("Failed to upload payment screenshot for user %s", user_id)
+
+    # Send notification email
+    resend_key = os.getenv("RESEND_API_KEY", "")
+    if resend_key:
+        screenshot_btn = (
+            f'<p><a href="{screenshot_url}" style="display:inline-block;background:#D94F3D;'
+            f'color:#fff;padding:10px 22px;border-radius:6px;text-decoration:none;font-weight:600">'
+            f'View Payment Screenshot</a></p>'
+            if screenshot_url
+            else "<p><em>Screenshot upload failed — check Supabase storage.</em></p>"
+        )
+        activation_cmd = (
+            f"curl -X POST \"https://your-api/admin/activate-pro"
+            f"?user_id={user_id}&admin_secret=YOUR_ADMIN_SECRET\""
+        )
+        html = f"""
+<h2 style="color:#D94F3D">New Pro Upgrade Request</h2>
+<table border="1" cellpadding="10" cellspacing="0" style="border-collapse:collapse;font-family:sans-serif">
+  <tr><td><strong>Name</strong></td><td>{name}</td></tr>
+  <tr><td><strong>Folio account</strong></td><td>{user_email}</td></tr>
+  <tr><td><strong>User ID</strong></td><td><code>{user_id}</code></td></tr>
+  <tr><td><strong>Country</strong></td><td>{country}</td></tr>
+  <tr><td><strong>Transfer method</strong></td><td>{transfer_method}</td></tr>
+  <tr><td><strong>Transaction ref</strong></td><td><strong>{transaction_ref}</strong></td></tr>
+  <tr><td><strong>Amount sent</strong></td><td>{amount_sent}</td></tr>
+  <tr><td><strong>Notes</strong></td><td>{notes or "—"}</td></tr>
+</table>
+{screenshot_btn}
+<hr>
+<p><strong>To activate:</strong></p>
+<pre style="background:#f5f5f5;padding:12px;border-radius:4px">{activation_cmd}</pre>
+<p>Or update <code>subscriptions</code> in Supabase: set <code>status='active'</code>,
+<code>current_period_end=now()+30days</code> where <code>user_id='{user_id}'</code></p>
+"""
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(
+                    "https://api.resend.com/emails",
+                    headers={"Authorization": f"Bearer {resend_key}"},
+                    json={
+                        "from": "Folio Upgrades <onboarding@resend.dev>",
+                        "to": [ADMIN_EMAIL],
+                        "subject": f"Pro Upgrade Request — {name} ({user_email})",
+                        "html": html,
+                    },
+                )
+                if resp.status_code not in (200, 201):
+                    logger.error(
+                        "Resend rejected upgrade email (HTTP %s): %s",
+                        resp.status_code,
+                        resp.text,
+                    )
+        except Exception:
+            logger.exception("Failed to send upgrade request email")
+
+    return {
+        "message": "Request received. We'll review your payment and activate your account within 24 hours."
+    }
+
+
+@app.post("/admin/test-email")
+async def admin_test_email(request: Request, admin_secret: str):
+    """Send a test email and return the raw Resend response — for debugging only."""
+    if not ADMIN_SECRET or admin_secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    resend_key = os.getenv("RESEND_API_KEY", "")
+    if not resend_key:
+        return {"error": "RESEND_API_KEY not set"}
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            "https://api.resend.com/emails",
+            headers={"Authorization": f"Bearer {resend_key}"},
+            json={
+                "from": "Folio Test <onboarding@resend.dev>",
+                "to": [ADMIN_EMAIL],
+                "subject": "Folio — test email",
+                "html": "<p>If you see this, Resend is working correctly.</p>",
+            },
+        )
+    return {"status": resp.status_code, "body": resp.json()}
+
+
+@app.post("/admin/activate-pro")
+async def admin_activate_pro(
+    request: Request,
+    user_id: str,
+    admin_secret: str,
+    days: int = 30,
+):
+    if not ADMIN_SECRET or admin_secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    sb = get_supabase()
+    period_end = (datetime.now(timezone.utc) + timedelta(days=days)).isoformat()
+    sb.table("subscriptions").upsert(
+        {"user_id": user_id, "status": "active", "current_period_end": period_end}
+    ).execute()
+    cache_del(f"sub:{user_id}")
+    return {"activated": user_id, "period_end": period_end, "days": days}
+
+
+@app.post("/admin/revoke-pro")
+async def admin_revoke_pro(request: Request, user_id: str, admin_secret: str):
+    if not ADMIN_SECRET or admin_secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    sb = get_supabase()
+    sb.table("subscriptions").upsert(
+        {"user_id": user_id, "status": "canceled"}
+    ).execute()
+    cache_del(f"sub:{user_id}")
+    return {"revoked": user_id}

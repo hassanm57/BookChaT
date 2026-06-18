@@ -10,6 +10,7 @@ import Chat from './pages/Chat'
 import PricingPage from './pages/PricingPage'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
+import UpgradePage from './pages/UpgradePage'
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
+          <Route path="/upgrade" element={<ProtectedRoute><UpgradePage /></ProtectedRoute>} />
           <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
           <Route path="/chat/:bookId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
         </Routes>
