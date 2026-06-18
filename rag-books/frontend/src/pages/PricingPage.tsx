@@ -55,7 +55,11 @@ export default function PricingPage() { // this is not implemented yet. shelving
         </ScatterReveal>
 
         <footer className="hero-footer">
-          <span className="hero-footer-copy">© 2026 BookChat - made by hassanM57</span>
+          <span className="hero-footer-copy">© 2026 Folio</span>
+          <span className="hero-footer-sep">·</span>
+          <a className="hero-footer-link" onClick={() => navigate('/privacy')}>Privacy Policy</a>
+          <span className="hero-footer-sep">·</span>
+          <a className="hero-footer-link" onClick={() => navigate('/terms')}>Terms of Service</a>
         </footer>
       </div>
     </ReactLenis>

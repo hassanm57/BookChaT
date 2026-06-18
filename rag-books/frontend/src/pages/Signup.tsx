@@ -180,6 +180,13 @@ export default function Signup() {
           </button>
         </form>
 
+        <p className="auth-legal-note">
+          By creating an account you agree to our{' '}
+          <Link to="/terms" className="auth-link">Terms of Service</Link>
+          {' '}and{' '}
+          <Link to="/privacy" className="auth-link">Privacy Policy</Link>.
+        </p>
+
         <p className="auth-switch">
           Already have an account? <Link to="/login" className="auth-link">Sign in</Link>
         </p>

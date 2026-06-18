@@ -692,7 +692,13 @@ export default function Library() {
 
       <footer className="lib-footer">
         <span>{books.length} book{books.length !== 1 ? 's' : ''} in collection</span>
-        <span>Folio © 2026</span>
+        <span className="lib-footer-legal">
+          <span>Folio © 2026</span>
+          <span className="lib-footer-sep">·</span>
+          <button className="lib-footer-link" onClick={() => navigate('/privacy')}>Privacy</button>
+          <span className="lib-footer-sep">·</span>
+          <button className="lib-footer-link" onClick={() => navigate('/terms')}>Terms</button>
+        </span>
       </footer>
     </div>
   )

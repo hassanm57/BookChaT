@@ -143,6 +143,11 @@ export default function Login() {
         <p className="auth-switch">
           Don't have an account? <Link to="/signup" className="auth-link">Sign up</Link>
         </p>
+        <p className="auth-legal-note">
+          <Link to="/privacy" className="auth-link">Privacy Policy</Link>
+          {' · '}
+          <Link to="/terms" className="auth-link">Terms of Service</Link>
+        </p>
       </motion.div>
     </div>
   )
