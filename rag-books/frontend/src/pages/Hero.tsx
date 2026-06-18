@@ -22,10 +22,22 @@ function countWords(t: string) { return t.trim() ? t.trim().split(/\s+/).length 
 
 export default function Hero() {
   const navigate = useNavigate()
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, signOut } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const asciiRef = useRef<HTMLPreElement>(null)
   const mouseRef = useRef<{ x: number; y: number } | null>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const [showUserMenu, setShowUserMenu] = useState(false)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   const [cName, setCName] = useState('')
   const [cEmail, setCEmail] = useState('')
@@ -189,6 +201,11 @@ export default function Hero() {
           <a className="hero-nav-link" href="#contact">Contact</a>
         </div>
         <div className="hero-nav-actions">
+          {/* "Open Library" sits left of dark mode when signed in */}
+          {!authLoading && user && (
+            <button className="hero-nav-cta" onClick={() => navigate('/library')}>Open Library</button>
+          )}
+
           <motion.button
             className="hero-theme-toggle"
             onClick={toggleTheme}
@@ -234,8 +251,47 @@ export default function Hero() {
             </AnimatePresence>
           </motion.button>
 
+          {/* Rightmost: avatar dropdown (signed in) or CTA buttons (signed out) */}
           {!authLoading && (user ? (
-            <button className="hero-nav-cta" onClick={() => navigate('/library')}>Open Library</button>
+            <div className="lib-user-menu" ref={menuRef}>
+              <button
+                className={`lib-user-avatar${showUserMenu ? ' lib-user-avatar--open' : ''}`}
+                onClick={() => setShowUserMenu(v => !v)}
+              >
+                {user.email?.slice(0, 2).toUpperCase() ?? 'U'}
+              </button>
+              <AnimatePresence>
+                {showUserMenu && (
+                  <motion.div
+                    className="lib-user-dropdown"
+                    initial={{ opacity: 0, scale: 0.94, y: -6 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.94, y: -6 }}
+                    transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <div className="lib-dropdown-header">
+                      <div className="lib-dropdown-avatar">{user.email?.slice(0, 2).toUpperCase() ?? 'U'}</div>
+                      <div className="lib-dropdown-info">
+                        <div className="lib-dropdown-name">{user.email?.split('@')[0]}</div>
+                        <div className="lib-dropdown-email">{user.email}</div>
+                      </div>
+                    </div>
+                    <div className="lib-dropdown-divider" />
+                    <button
+                      className="lib-dropdown-signout"
+                      onClick={() => { setShowUserMenu(false); signOut() }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                      </svg>
+                      Sign out
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           ) : (
             <>
               <button className="hero-nav-cta" onClick={() => navigate('/signup')}>Get started</button>
