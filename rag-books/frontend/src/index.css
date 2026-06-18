@@ -4512,6 +4512,8 @@ a { text-decoration: none; color: inherit; }
   border-radius: 8px;
 }
 .lib-card:hover .lib-card-overlay { opacity: 1; }
+.lib-card-overlay--confirm,
+.lib-card-overlay--deleting { opacity: 1 !important; }
 
 .lib-card-chat {
   font-size: 0.8rem;
@@ -4521,6 +4523,94 @@ a { text-decoration: none; color: inherit; }
   padding: 8px 18px;
   border-radius: 40px;
   letter-spacing: 0.02em;
+}
+
+/* Delete button — appears in overlay alongside Chat pill */
+.lib-card-overlay { gap: 10px; flex-direction: column; }
+
+.lib-card-delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.12s;
+  backdrop-filter: blur(4px);
+}
+.lib-card-delete-btn:hover {
+  background: rgba(185,64,64,0.85);
+  color: white;
+  transform: scale(1.08);
+}
+
+/* Confirm state */
+.lib-card-overlay--confirm {
+  background: rgba(0,0,0,0.72);
+  flex-direction: column;
+  gap: 12px;
+}
+.lib-card-confirm-text {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+  text-align: center;
+}
+.lib-card-confirm-actions {
+  display: flex;
+  gap: 7px;
+}
+.lib-card-confirm-yes {
+  padding: 6px 14px;
+  background: #c94040;
+  color: white;
+  border: none;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.lib-card-confirm-yes:hover { background: #a83333; }
+.lib-card-confirm-no {
+  padding: 6px 14px;
+  background: rgba(255,255,255,0.12);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.lib-card-confirm-no:hover { background: rgba(255,255,255,0.2); }
+
+/* Deleting state */
+.lib-card--deleting {
+  opacity: 0.5;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.lib-card-overlay--deleting {
+  background: rgba(0,0,0,0.6);
+}
+.lib-card-deleting-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
 }
 
 .lib-card--selected .lib-card-cover {

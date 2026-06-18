@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../contexts/ThemeContext'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -9,6 +10,17 @@ const PRIVACY_EMAIL = 'privacy@getfolio.app'
 export default function TermsPage() {
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
+
+  useEffect(() => {
+    document.body.style.overflow = 'auto'
+    document.documentElement.style.overflow = 'auto'
+    document.documentElement.style.scrollBehavior = 'smooth'
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+      document.documentElement.style.scrollBehavior = ''
+    }
+  }, [])
 
   return (
     <div className="priv-page">

@@ -11,21 +11,28 @@ from dotenv import load_dotenv
 # Load .env before any backend modules read os.environ at import time
 load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
 
+import logging
+
 import fitz
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from qdrant_client import QdrantClient
+from qdrant_client.models import FieldCondition, Filter, FilterSelector, MatchValue
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from backend.auth import get_current_user
-from backend.cache import cache_get, cache_set
+from backend.cache import cache_del, cache_get, cache_set
+from backend.config import QDRANT_COLLECTION, QDRANT_HOST, QDRANT_PORT
 from backend.rate_limiter import limiter
 from backend.retriever import retrieve
 from backend.llm import generate
 from backend.supabase_client import get_supabase
 from backend.upload import router as upload_router
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Folio API")
 app.state.limiter = limiter
@@ -192,6 +199,63 @@ def get_pdf_url(request: Request, book_id: str, user_id: str = Depends(get_curre
     url = signed["signedURL"]
     cache_set(ck, url, 3300)  # 55 min — 5 min buffer before Supabase 1hr expiry
     return {"url": url}
+
+
+@app.delete("/books/{book_id}")
+@limiter.limit("30/minute")
+def delete_book(request: Request, book_id: str, user_id: str = Depends(get_current_user)):
+    sb = get_supabase()
+
+    # Verify ownership and get pdf_filename before deleting anything
+    result = (
+        sb.table("books")
+        .select("book_id, pdf_filename")
+        .eq("user_id", user_id)
+        .eq("book_id", book_id)
+        .single()
+        .execute()
+    )
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    pdf_filename = result.data["pdf_filename"]
+
+    # 1. Delete Qdrant vectors (best-effort — don't let Qdrant failure block the rest)
+    try:
+        qdrant = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
+        qdrant.delete(
+            collection_name=QDRANT_COLLECTION,
+            points_selector=FilterSelector(
+                filter=Filter(
+                    must=[
+                        FieldCondition(key="book_id", match=MatchValue(value=book_id)),
+                        FieldCondition(key="user_id", match=MatchValue(value=user_id)),
+                    ]
+                )
+            ),
+        )
+    except Exception:
+        logger.exception("Qdrant delete failed for book %s — continuing", book_id)
+
+    # 2. Delete PDF from Storage
+    try:
+        sb.storage.from_("pdfs").remove([f"{user_id}/{pdf_filename}"])
+    except Exception:
+        logger.exception("Storage delete (PDF) failed for book %s — continuing", book_id)
+
+    # 3. Delete cover from Storage
+    try:
+        sb.storage.from_("covers").remove([f"{user_id}/{book_id}_cover.jpg"])
+    except Exception:
+        pass  # cover may not exist for processing/error books
+
+    # 4. Delete DB row
+    sb.table("books").delete().eq("user_id", user_id).eq("book_id", book_id).execute()
+
+    # 5. Bust cache
+    cache_del(f"books:{user_id}", f"book:{user_id}:{book_id}", f"pdf_url:{user_id}:{book_id}")
+
+    return {"deleted": book_id}
 
 
 @app.post("/chat")

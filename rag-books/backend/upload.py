@@ -106,7 +106,7 @@ def _send_ready_email(user_id: str, title: str) -> None:
             "https://api.resend.com/emails",
             headers={"Authorization": f"Bearer {resend_key}", "Content-Type": "application/json"},
             json={
-                "from": "Folio <noreply@getfolio.app>",
+                "from": "Folio <onboarding@resend.dev>",
                 "to": [email],
                 "subject": f"“{title}” is ready to chat",
                 "html": (

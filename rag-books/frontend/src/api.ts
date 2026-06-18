@@ -56,6 +56,14 @@ export async function extractMetadata(file: File): Promise<{ title: string; auth
   return res.json()
 }
 
+export async function deleteBook(bookId: string): Promise<void> {
+  const res = await fetch(`/api/books/${bookId}`, {
+    method: 'DELETE',
+    headers: await authHeaders(),
+  })
+  if (!res.ok) throw new Error('Failed to delete book')
+}
+
 export async function uploadBook(file: File, title: string, author: string, genre: string): Promise<Book> {
   const form = new FormData()
   form.append('file', file)

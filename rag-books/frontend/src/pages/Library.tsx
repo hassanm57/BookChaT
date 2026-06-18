@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { fetchBooks, fetchBook, uploadBook, extractMetadata, UploadLimitError } from '../api'
+import { fetchBooks, fetchBook, uploadBook, extractMetadata, deleteBook, UploadLimitError } from '../api'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import type { Book } from '../types'
@@ -566,6 +566,17 @@ export default function Library() {
     setShowUpload(true)
   }
 
+  const handleDelete = async (bookId: string) => {
+    await deleteBook(bookId)
+    setBooks(prev => {
+      const next = prev.filter(b => b.book_id !== bookId)
+      // Keep selectedIndex in range
+      setSelectedIndex(i => Math.min(i, Math.max(0, next.length - 1)))
+      return next
+    })
+    stopPolling(bookId)
+  }
+
   const initials = user?.email?.slice(0, 2).toUpperCase() ?? 'U'
 
   if (loading) return <LibrarySkeleton />
@@ -755,6 +766,7 @@ export default function Library() {
                       isSelected={book.book_id === selected?.book_id}
                       onHover={() => setSelectedIndex(books.indexOf(book) === -1 ? i : books.indexOf(book))}
                       onClick={() => navigate(`/chat/${book.book_id}`, { state: { book } })}
+                      onDelete={handleDelete}
                     />
                   </motion.div>
                 ))}
