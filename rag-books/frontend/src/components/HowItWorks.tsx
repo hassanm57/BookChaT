@@ -5,7 +5,7 @@ const STEPS = [
   {
     n: '01',
     title: 'Upload your PDF',
-    desc: 'Drop any PDF into Folio. Every page is chunked and embedded into a vector index automatically.',
+    desc: 'Drop any PDF into Folio. Every page is read and indexed automatically so you can search and chat with it.',
     visual: <UploadVisual />,
   },
   {
@@ -185,7 +185,7 @@ function AnswerVisual() {
     <div className="hiw-visual-content">
       <div className="hiw-answer-msg user">What does the green light symbolize?</div>
       <div className="hiw-answer-msg assistant">
-        <p>The green light represents Gatsby's longing for Daisy and the broader American Dream — a hope perpetually deferred across the water.</p>
+        <p>The green light represents Gatsby's longing for Daisy and the broader American Dream, a hope perpetually deferred across the water.</p>
         <div className="hiw-answer-chips">
           <span className="hiw-chip">p. 21</span>
           <span className="hiw-chip">p. 98</span>

@@ -12,7 +12,7 @@ const PILLS: Pill[] = [
   {
     id: 1,
     q: 'What books work?',
-    a: 'Any PDF — novels, textbooks, research papers, even manuals. If it opens in a PDF reader, Folio can read it.',
+    a: 'Any PDF: novels, textbooks, research papers, even manuals. If it opens in a PDF reader, Folio can read it.',
   },
   {
     id: 2,
@@ -27,7 +27,7 @@ const PILLS: Pill[] = [
   {
     id: 4,
     q: "What's Pro?",
-    a: 'Pro is $4.99/mo — unlimited PDF uploads, larger context windows, and priority processing. Launching soon.',
+    a: 'Pro is $4.99/mo: unlimited uploads, bigger books, and faster processing. Launching soon.',
   },
   {
     id: 5,
@@ -64,7 +64,7 @@ function TypingDots() {
 
 export default function FaqPhone() {
   const [messages, setMessages] = useState<Msg[]>([
-    { id: msgId++, role: 'assistant', text: "Hey! I'm Folio. Tap a question below — I'll answer anything about the app." },
+    { id: msgId++, role: 'assistant', text: "Hey! I'm Folio. Tap a question below and I'll answer anything about the app." },
   ])
   const [usedIds, setUsedIds] = useState<Set<number>>(new Set())
   const [isTyping, setIsTyping] = useState(false)

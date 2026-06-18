@@ -278,13 +278,13 @@ async def chat(request: Request, body: ChatRequest, user_id: str = Depends(get_c
     except Exception:
         raise HTTPException(
             status_code=503,
-            detail={"code": "RETRIEVAL_UNAVAILABLE", "message": "Search is temporarily unavailable. Please try again in a moment."},
+            detail={"code": "RETRIEVAL_UNAVAILABLE", "message": "Folio is temporarily unavailable. Please try again in a moment."},
         )
 
     if not chunks:
         raise HTTPException(
             status_code=404,
-            detail={"code": "NO_RESULTS", "message": "No relevant passages found for that question. Try rephrasing or asking about a different topic."},
+            detail={"code": "NO_RESULTS", "message": "Nothing found on that topic. Try asking it a different way."},
         )
 
     return StreamingResponse(

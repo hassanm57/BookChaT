@@ -93,7 +93,7 @@ export default function BookCard({ book, isSelected, onHover, onClick, onDelete 
         {isProcessing ? (
           <div className="lib-card-ingesting">
             <span className="lib-card-ingesting-dot" />
-            Ingesting
+            Preparing
           </div>
         ) : (
           <div className="lib-card-author">{book.author}</div>

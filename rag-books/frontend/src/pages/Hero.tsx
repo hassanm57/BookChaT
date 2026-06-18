@@ -290,7 +290,7 @@ export default function Hero() {
               <div className="scroll-preview-messages">
                 <div className="scroll-preview-msg user">How did Myrtle first meet Tom?</div>
                 <div className="scroll-preview-msg assistant">
-                  Myrtle met Tom on a train to New York — she was transfixed by his dress suit and patent leather shoes. They ended up sharing a taxi, and she couldn't stop thinking: <em>"You can't live forever."</em>
+                  Myrtle met Tom on a train to New York. She was transfixed by his dress suit and patent leather shoes. They ended up sharing a taxi, and she couldn't stop thinking: <em>"You can't live forever."</em>
                   <div className="scroll-preview-chips">
                     <span className="scroll-preview-chip">p. 40</span>
                     <span className="scroll-preview-chip">p. 41</span>

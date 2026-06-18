@@ -236,7 +236,7 @@ export default function BookMorph() {
             animate={{ opacity: morphValue < 0.3 ? 1 : 0 }}
             transition={{ duration: 0.7, delay: 0.18 }}
           >
-            Upload any PDF — novels, textbooks, research papers — and start chatting instantly.
+            Upload any PDF: novels, textbooks, research papers, and start chatting instantly.
           </motion.p>
         </div>
 

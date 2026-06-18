@@ -93,7 +93,7 @@ export default function OnboardingModal({ onClose }: Props) {
 
           <div className="ob-footer">
             <p className="ob-paid-note">
-              Folio is a paid product — you're on the free tier.
+              Folio is a paid product. You're on the free tier.
               <span className="ob-paid-link" onClick={() => { handleDone(); navigate('/pricing') }}> Upgrade anytime →</span>
             </p>
             <button className="ob-cta" onClick={handleDone}>

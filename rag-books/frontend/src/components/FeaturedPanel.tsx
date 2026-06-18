@@ -36,7 +36,7 @@ export default function FeaturedPanel({ book, onRead }: Props) {
               onClick={onRead}
               disabled={book.status === 'processing'}
             >
-              {book.status === 'processing' ? 'Processing...' : 'Open book'}
+              {book.status === 'processing' ? 'Preparing...' : 'Open book'}
               {book.status !== 'processing' && (
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M12 5l7 7-7 7"/>

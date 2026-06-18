@@ -143,7 +143,7 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
             </p>
             <div className="upload-limit-actions">
               <button className="upload-limit-cta" onClick={() => { onClose(); window.location.href = '/pricing' }}>
-                Upgrade to Pro — $4.99/mo
+                Upgrade to Pro, $4.99/mo
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M12 5l7 7-7 7"/>
                 </svg>
@@ -358,7 +358,7 @@ const EMPTY_STEPS = [
   {
     n: '01',
     title: 'Upload any PDF',
-    body: 'Textbooks, research papers, novels — anything up to 50 MB.',
+    body: 'Textbooks, research papers, novels: anything up to 50 MB.',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
@@ -368,7 +368,7 @@ const EMPTY_STEPS = [
   {
     n: '02',
     title: 'We process it',
-    body: 'Folio chunks and embeds your document. Usually done in under a minute.',
+    body: 'Folio reads every page of your document. Usually done in under a minute.',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>

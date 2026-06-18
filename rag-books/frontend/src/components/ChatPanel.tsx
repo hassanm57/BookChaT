@@ -262,7 +262,7 @@ export default function ChatPanel({ bookId, bookTitle, bookAuthor, bookGenre, on
             : res.status === 429
               ? 'You\'re sending messages too fast. Wait a moment and try again.'
               : res.status === 404
-                ? 'No relevant passages found. Try rephrasing your question.'
+                ? 'Nothing found on that topic. Try asking it a different way.'
                 : 'Something went wrong. Please try again.'
         throw new Error(msg)
       }
