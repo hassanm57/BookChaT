@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback, Fragment } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { fetchBooks, fetchBook, uploadBook, extractMetadata, deleteBook, UploadLimitError } from '../api'
+import { fetchBooks, fetchBook, uploadBook, extractMetadata, deleteBook, getSubscriptionStatus, UploadLimitError } from '../api'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import type { Book } from '../types'
@@ -139,7 +139,7 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
             </div>
             <h2 className="upload-limit-heading">You've reached the free limit</h2>
             <p className="upload-limit-body">
-              The free plan includes 1 book. Upgrade to Pro to add up to 10 books and get 25 messages per day.
+              The free plan includes 1 book. Upgrade to Pro to add up to 10 books and get 30 messages per day.
             </p>
             <div className="upload-limit-actions">
               <button className="upload-limit-cta" onClick={() => { onClose(); window.location.href = '/upgrade' }}>
@@ -471,6 +471,12 @@ export default function Library() {
   const [uploadKey, setUploadKey] = useState(0)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [subStatus, setSubStatus] = useState<{
+    is_pro: boolean
+    messages_used: number
+    limit: number
+    messages_remaining: number
+  } | null>(null)
   const pollingRef = useRef<Map<string, number>>(new Map())
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -553,6 +559,16 @@ export default function Library() {
         data.filter(b => b.status === 'processing').forEach(b => startPolling(b.book_id))
       })
       .catch(() => setLoading(false))
+
+    // Fetch subscription status for banner
+    getSubscriptionStatus()
+      .then(s => setSubStatus({
+        is_pro: s.is_pro,
+        messages_used: s.messages_used,
+        limit: s.limit,
+        messages_remaining: s.messages_remaining,
+      }))
+      .catch(() => {})
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startPolling])
 
@@ -698,6 +714,32 @@ export default function Library() {
           </div>
         </div>
       </nav>
+
+      {/* Free tier banner — only visible when not pro */}
+      {subStatus && !subStatus.is_pro && (
+        <motion.div
+          className="lib-free-banner"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="lib-free-banner-left">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            <span>
+              Free plan &mdash; <strong>{subStatus.messages_used} of {subStatus.limit}</strong> lifetime messages used
+              {subStatus.messages_remaining === 0 && <> &middot; <strong>limit reached</strong></>}
+            </span>
+          </div>
+          <button className="lib-free-banner-cta" onClick={() => navigate('/upgrade')}>
+            Upgrade to Pro
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </motion.div>
+      )}
 
       {books.length === 0 ? (
         <EmptyState onUpload={openUpload} />

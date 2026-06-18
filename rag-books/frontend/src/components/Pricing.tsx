@@ -4,14 +4,14 @@ import { useAuth } from '../contexts/AuthContext'
 
 const FREE_FEATURES = [
   '1 book in your library',
-  '10 messages per day',
+  '10 messages lifetime',
   'Full PDF viewer',
   'Clickable page citations',
 ]
 
 const PRO_FEATURES = [
   'Up to 10 books',
-  '25 messages per day',
+  '30 messages per day',
   'Full PDF viewer',
   'Clickable page citations',
   'Priority email support',

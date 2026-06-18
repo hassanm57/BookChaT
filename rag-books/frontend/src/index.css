@@ -6663,3 +6663,59 @@ a { text-decoration: none; color: inherit; }
   .upg-info-heading { font-size: 1.8rem; }
   .upg-nav { padding: 0 20px; }
 }
+
+/* ─── Library Free Tier Banner ───────────────────────────────────────────── */
+.lib-free-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--accent-light);
+  border-bottom: 1px solid rgba(217, 79, 61, 0.14);
+  padding: 10px 32px;
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+[data-theme="dark"] .lib-free-banner {
+  background: rgba(217, 79, 61, 0.09);
+  border-bottom-color: rgba(217, 79, 61, 0.18);
+}
+.lib-free-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.lib-free-banner-left svg {
+  flex-shrink: 0;
+  color: var(--accent);
+  opacity: 0.85;
+}
+.lib-free-banner-left strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.lib-free-banner-cta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 5px 13px;
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition), transform 0.15s;
+  flex-shrink: 0;
+}
+.lib-free-banner-cta:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+@media (max-width: 600px) {
+  .lib-free-banner { padding: 9px 16px; flex-wrap: wrap; }
+}

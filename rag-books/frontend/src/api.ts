@@ -78,8 +78,9 @@ export async function deleteBook(bookId: string): Promise<void> {
 export async function getSubscriptionStatus(): Promise<{
   is_pro: boolean
   status: string
-  messages_today: number
-  daily_limit: number
+  limit_type: 'lifetime' | 'daily'
+  messages_used: number
+  limit: number
   messages_remaining: number
 }> {
   const res = await fetch('/api/subscription-status', { headers: await authHeaders() })

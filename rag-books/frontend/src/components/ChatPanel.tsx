@@ -259,7 +259,8 @@ export default function ChatPanel({ bookId, bookTitle, bookAuthor, bookGenre, on
       if (!res.ok || !res.body) {
         const json = await res.json().catch(() => null)
         const detail = json?.detail
-        const isDailyLimit = typeof detail === 'object' && detail?.code === 'DAILY_LIMIT'
+        const isQuotaLimit = typeof detail === 'object' &&
+          (detail?.code === 'DAILY_LIMIT' || detail?.code === 'LIFETIME_LIMIT')
         const msg = typeof detail === 'object' && detail?.message
           ? detail.message
           : res.status === 503
@@ -269,7 +270,7 @@ export default function ChatPanel({ bookId, bookTitle, bookAuthor, bookGenre, on
               : res.status === 404
                 ? 'Nothing found on that topic. Try asking it a different way.'
                 : 'Something went wrong. Please try again.'
-        if (isDailyLimit) {
+        if (isQuotaLimit) {
           setMessages(prev => {
             const msgs = [...prev]
             msgs[msgs.length - 1] = {

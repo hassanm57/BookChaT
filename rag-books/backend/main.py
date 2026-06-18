@@ -38,11 +38,24 @@ from backend.upload import router as upload_router
 ADMIN_SECRET = os.getenv("ADMIN_SECRET", "")
 ADMIN_EMAIL = "hassanmansoor1569@gmail.com"
 
-FREE_DAILY_LIMIT = 10
-PRO_DAILY_LIMIT = 25
+FREE_LIFETIME_LIMIT = 10   # total messages ever on free plan — no reset
+PRO_DAILY_LIMIT = 30       # messages per UTC day on pro plan
+
+
+def _count_lifetime_messages(user_id: str) -> int:
+    """Count ALL messages ever sent by this user (used for free tier lifetime cap)."""
+    sb = get_supabase()
+    result = (
+        sb.table("message_events")
+        .select("id", count="exact")
+        .eq("user_id", user_id)
+        .execute()
+    )
+    return result.count or 0
 
 
 def _count_today_messages(user_id: str) -> int:
+    """Count messages sent today (UTC) — used for pro tier daily cap."""
     today_start = (
         datetime.now(timezone.utc)
         .replace(hour=0, minute=0, second=0, microsecond=0)
@@ -300,23 +313,34 @@ async def chat(request: Request, body: ChatRequest, user_id: str = Depends(get_c
     if not result.data:
         raise HTTPException(status_code=403, detail="Book not found or access denied")
 
-    # Enforce daily message quota
+    # Enforce message quota (lifetime for free, daily for pro)
     sub = get_subscription(user_id)
-    daily_limit = PRO_DAILY_LIMIT if sub["is_pro"] else FREE_DAILY_LIMIT
-    today_count = _count_today_messages(user_id)
-    if today_count >= daily_limit:
-        raise HTTPException(
-            status_code=429,
-            detail={
-                "code": "DAILY_LIMIT",
-                "message": (
-                    f"You've used all {daily_limit} messages for today. "
-                    "Your limit resets at midnight UTC."
-                ),
-                "is_pro": sub["is_pro"],
-                "limit": daily_limit,
-            },
-        )
+    if sub["is_pro"]:
+        count = _count_today_messages(user_id)
+        limit = PRO_DAILY_LIMIT
+        if count >= limit:
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    "code": "DAILY_LIMIT",
+                    "message": f"You've used all {limit} messages for today. Your limit resets at midnight UTC.",
+                    "is_pro": True,
+                    "limit": limit,
+                },
+            )
+    else:
+        count = _count_lifetime_messages(user_id)
+        limit = FREE_LIFETIME_LIMIT
+        if count >= limit:
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    "code": "LIFETIME_LIMIT",
+                    "message": f"You've used all {limit} free messages. Upgrade to Pro for 30 messages per day.",
+                    "is_pro": False,
+                    "limit": limit,
+                },
+            )
 
     # Record the message event before retrieval (prevents gaming by aborting)
     sb.table("message_events").insert({"user_id": user_id}).execute()
@@ -345,14 +369,21 @@ async def chat(request: Request, body: ChatRequest, user_id: str = Depends(get_c
 @limiter.limit("60/minute")
 def subscription_status(request: Request, user_id: str = Depends(get_current_user)):
     sub = get_subscription(user_id)
-    today_count = _count_today_messages(user_id)
-    daily_limit = PRO_DAILY_LIMIT if sub["is_pro"] else FREE_DAILY_LIMIT
+    if sub["is_pro"]:
+        count = _count_today_messages(user_id)
+        limit = PRO_DAILY_LIMIT
+        limit_type = "daily"
+    else:
+        count = _count_lifetime_messages(user_id)
+        limit = FREE_LIFETIME_LIMIT
+        limit_type = "lifetime"
     return {
         "is_pro": sub["is_pro"],
         "status": sub["status"],
-        "messages_today": today_count,
-        "daily_limit": daily_limit,
-        "messages_remaining": max(0, daily_limit - today_count),
+        "limit_type": limit_type,
+        "messages_used": count,
+        "limit": limit,
+        "messages_remaining": max(0, limit - count),
     }
 
 
