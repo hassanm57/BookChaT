@@ -378,6 +378,8 @@ async def upgrade_request(
     except Exception:
         user_email = "unknown"
 
+    logger.info("upgrade-request: received from user=%s email=%s", user_id, user_email)
+
     # Upload screenshot to private bucket
     screenshot_url = ""
     try:
@@ -400,11 +402,13 @@ async def upgrade_request(
             signed.get("signedURL")
             or (signed.get("data") or {}).get("signedUrl", "")
         )
+        logger.info("upgrade-request: screenshot uploaded, url=%s", bool(screenshot_url))
     except Exception:
-        logger.exception("Failed to upload payment screenshot for user %s", user_id)
+        logger.exception("upgrade-request: screenshot upload failed for user %s", user_id)
 
     # Send notification email
     resend_key = os.getenv("RESEND_API_KEY", "")
+    logger.info("upgrade-request: sending email, resend_key_set=%s", bool(resend_key))
     if resend_key:
         screenshot_btn = (
             f'<p><a href="{screenshot_url}" style="display:inline-block;background:#D94F3D;'
@@ -413,9 +417,10 @@ async def upgrade_request(
             if screenshot_url
             else "<p><em>Screenshot upload failed — check Supabase storage.</em></p>"
         )
+        admin_secret_val = os.getenv("ADMIN_SECRET", "YOUR_ADMIN_SECRET")
         activation_cmd = (
-            f"curl -X POST \"https://your-api/admin/activate-pro"
-            f"?user_id={user_id}&admin_secret=YOUR_ADMIN_SECRET\""
+            f"curl -X POST \"http://localhost:8000/admin/activate-pro"
+            f"?user_id={user_id}&admin_secret={admin_secret_val}\""
         )
         html = f"""
 <h2 style="color:#D94F3D">New Pro Upgrade Request</h2>
@@ -431,10 +436,8 @@ async def upgrade_request(
 </table>
 {screenshot_btn}
 <hr>
-<p><strong>To activate:</strong></p>
+<p><strong>To activate, run this curl:</strong></p>
 <pre style="background:#f5f5f5;padding:12px;border-radius:4px">{activation_cmd}</pre>
-<p>Or update <code>subscriptions</code> in Supabase: set <code>status='active'</code>,
-<code>current_period_end=now()+30days</code> where <code>user_id='{user_id}'</code></p>
 """
         try:
             async with httpx.AsyncClient() as client:
@@ -448,14 +451,15 @@ async def upgrade_request(
                         "html": html,
                     },
                 )
+                logger.info("upgrade-request: Resend status=%s body=%s", resp.status_code, resp.text)
                 if resp.status_code not in (200, 201):
                     logger.error(
-                        "Resend rejected upgrade email (HTTP %s): %s",
+                        "upgrade-request: Resend rejected (HTTP %s): %s",
                         resp.status_code,
                         resp.text,
                     )
         except Exception:
-            logger.exception("Failed to send upgrade request email")
+            logger.exception("upgrade-request: exception calling Resend")
 
     return {
         "message": "Request received. We'll review your payment and activate your account within 24 hours."
