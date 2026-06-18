@@ -6676,6 +6676,266 @@ a { text-decoration: none; color: inherit; }
 }
 .upg-success-cta:hover { opacity: 0.88; }
 
+/* ─── Animated Ticket ─────────────────────────────────────────────────────── */
+.upg-ticket-wrap {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+.upg-ticket-cta {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 14px !important;
+  font-size: 0.9rem !important;
+}
+
+/* Wrapper: positions notches + download btn over the ticket */
+.atk-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Ticket stub notch cutouts */
+.atk-notch {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--bg);
+  top: 55%;
+  transform: translateY(-50%);
+  z-index: 4;
+  pointer-events: none;
+}
+.atk-notch--l { left: -15px; }
+.atk-notch--r { right: -15px; }
+
+/* Download button — floats top-right of ticket */
+.atk-dl-btn {
+  position: absolute;
+  top: 13px;
+  right: 13px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px 5px 9px;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 20px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  color: #444;
+  cursor: pointer;
+  transition: background 0.14s, box-shadow 0.14s, transform 0.1s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.atk-dl-btn:hover:not(:disabled) {
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+  transform: translateY(-1px);
+}
+.atk-dl-btn:disabled { opacity: 0.5; cursor: default; }
+.atk-dl-btn--busy { pointer-events: none; }
+.atk-dl-spin {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border: 1.8px solid #ccc;
+  border-top-color: #555;
+  border-radius: 50%;
+  animation: atk-spin 0.75s linear infinite;
+}
+
+/* Main ticket card — always white (receipt aesthetic) */
+.atk-ticket {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow:
+    0 2px 6px rgba(0,0,0,0.06),
+    0 8px 28px rgba(0,0,0,0.11),
+    0 20px 60px rgba(0,0,0,0.08);
+  padding: 34px 30px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: #1a1a1a;
+  font-family: var(--font-ui);
+}
+
+/* Header */
+.atk-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 9px;
+}
+.atk-check-ring {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.09);
+  border: 1.5px solid rgba(34, 197, 94, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #16a34a;
+  flex-shrink: 0;
+}
+.atk-title {
+  font-family: var(--font-display);
+  font-size: 1.42rem;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+  letter-spacing: -0.015em;
+}
+.atk-subtitle {
+  font-size: 0.83rem;
+  color: #888;
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* Dashed rule */
+.atk-rule {
+  width: 100%;
+  border: none;
+  border-top: 2px dashed rgba(0,0,0,0.1);
+  flex-shrink: 0;
+}
+
+/* Content section */
+.atk-section {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+.atk-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.atk-align-right { text-align: right; }
+
+/* Field label / value */
+.atk-lbl {
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #aaa;
+  margin: 0 0 3px;
+}
+.atk-val {
+  font-size: 0.87rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin: 0;
+  line-height: 1.3;
+  word-break: break-all;
+}
+.atk-mono {
+  font-family: 'Menlo', 'Consolas', 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+}
+.atk-val--price {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #D94F3D;
+  letter-spacing: -0.01em;
+}
+.atk-val--sm { font-size: 0.77rem; }
+
+/* Sender info card */
+.atk-sender {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f6f5f3;
+  border-radius: 12px;
+  padding: 11px 13px;
+}
+.atk-sender-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.atk-sender-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.atk-sender-name {
+  font-size: 0.87rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.atk-sender-email {
+  font-size: 0.78rem;
+  color: #666;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.atk-sender-meta {
+  font-size: 0.73rem;
+  color: #aaa;
+  margin: 0;
+}
+
+/* Barcode */
+.atk-barcode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 0;
+}
+.atk-barcode-label {
+  font-family: 'Menlo', 'Consolas', monospace;
+  font-size: 0.7rem;
+  color: #bbb;
+  letter-spacing: 0.18em;
+  margin: 0;
+}
+
+/* Footer tagline */
+.atk-tagline {
+  font-size: 0.7rem;
+  color: #ccc;
+  text-align: center;
+  letter-spacing: 0.03em;
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .atk-ticket { padding: 28px 22px 22px; }
+  .atk-title  { font-size: 1.25rem; }
+  .atk-notch--l { left: -12px; }
+  .atk-notch--r { right: -12px; }
+}
+
 @media (max-width: 800px) {
   .upg-body {
     grid-template-columns: 1fr;

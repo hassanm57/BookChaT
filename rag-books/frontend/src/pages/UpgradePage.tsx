@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { submitUpgradeRequest } from '../api'
 import ContactModal from '../components/ContactModal'
+import AnimatedTicket, { type TicketData } from '../components/AnimatedTicket'
 
 const NAYAPAY_ACCOUNT_NAME = 'Hassan Mansoor'
 const NAYAPAY_IBAN = 'PK55NAYA1234503325560873'
@@ -124,6 +125,7 @@ export default function UpgradePage() {
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [submissionData, setSubmissionData] = useState<TicketData | null>(null)
   const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -208,6 +210,19 @@ export default function UpgradePage() {
       fd.append('notes', form.notes)
       fd.append('screenshot', screenshot)
       await submitUpgradeRequest(fd)
+      const receiptId = `FLO-${Date.now().toString(36).slice(-6).toUpperCase()}`
+      setSubmissionData({
+        receiptId,
+        ticketId: form.transaction_ref,
+        name: form.name,
+        email: user?.email ?? '',
+        amount: isNonUSD && country
+          ? `${convertedFormatted} ${currencyCode} (≈ $${PRICE_USD})`
+          : `$${PRICE_USD} USD`,
+        country,
+        transferMethod: form.transfer_method,
+        date: new Date(),
+      })
       setSubmitted(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Submission failed. Please try again.')
@@ -216,7 +231,7 @@ export default function UpgradePage() {
     }
   }
 
-  if (submitted) {
+  if (submitted && submissionData) {
     return (
       <div className="upg-page">
         <nav className="upg-nav">
@@ -227,23 +242,17 @@ export default function UpgradePage() {
         </nav>
         <div className="upg-success">
           <motion.div
-            className="upg-success-card"
-            initial={{ opacity: 0, scale: 0.92, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="upg-ticket-wrap"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            <div className="upg-success-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
+            <AnimatedTicket data={submissionData} />
+            <button className="upg-success-cta upg-ticket-cta" onClick={() => navigate('/library')}>
+              Open your library
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
               </svg>
-            </div>
-            <h2 className="upg-success-title">Request received</h2>
-            <p className="upg-success-body">
-              We'll verify your payment and activate your Pro account within 24 hours.
-              You'll be able to chat with up to 10 books and 50 messages per day.
-            </p>
-            <button className="upg-success-cta" onClick={() => navigate('/library')}>
-              Back to library
             </button>
           </motion.div>
         </div>
