@@ -1,8 +1,9 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { motion, AnimatePresence } from 'framer-motion'
+import { submitContact } from '../api'
 import ReactLenis from 'lenis/react'
 import { ContainerScroll } from '../components/ContainerScroll'
 import FeatureOrbit from '../components/FeatureOrbit'
@@ -16,6 +17,8 @@ import BookMorph from '../components/BookMorph'
 
 const ASCII_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:!?"\'—§¶*#@'
 
+const MAX_WORDS = 200
+function countWords(t: string) { return t.trim() ? t.trim().split(/\s+/).length : 0 }
 
 export default function Hero() {
   const navigate = useNavigate()
@@ -23,6 +26,30 @@ export default function Hero() {
   const { theme, toggleTheme } = useTheme()
   const asciiRef = useRef<HTMLPreElement>(null)
   const mouseRef = useRef<{ x: number; y: number } | null>(null)
+
+  const [cName, setCName] = useState('')
+  const [cEmail, setCEmail] = useState('')
+  const [cMsg, setCMsg] = useState('')
+  const [cSubmitting, setCSubmitting] = useState(false)
+  const [cDone, setCDone] = useState(false)
+  const [cError, setCError] = useState('')
+  const cWords = countWords(cMsg)
+  const cOverLimit = cWords > MAX_WORDS
+
+  const handleContact = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (cOverLimit) { setCError(`Please keep your message under ${MAX_WORDS} words.`); return }
+    setCError('')
+    setCSubmitting(true)
+    try {
+      await submitContact({ name: cName, email: cEmail, message: cMsg })
+      setCDone(true)
+    } catch (err) {
+      setCError(err instanceof Error ? err.message : 'Something went wrong.')
+    } finally {
+      setCSubmitting(false)
+    }
+  }
 
   // Allow page to scroll
   useEffect(() => {
@@ -159,6 +186,7 @@ export default function Hero() {
           <a className="hero-nav-link" href="#how-it-works">How it works</a>
           <a className="hero-nav-link" href="#faq">FAQ</a>
           <a className="hero-nav-link" href="/pricing">Pricing</a>
+          <a className="hero-nav-link" href="#contact">Contact</a>
         </div>
         <div className="hero-nav-actions">
           <motion.button
@@ -339,6 +367,148 @@ export default function Hero() {
         <FaqPhone />
       </ScatterReveal>
 
+      {/* Section 5: Contact */}
+      <section id="contact" className="hero-contact-section">
+        <div className="hero-contact-inner">
+          {/* Left */}
+          <motion.div
+            className="hero-contact-left"
+            initial={{ opacity: 0, x: -24 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            <p className="hero-contact-eyebrow">Contact us</p>
+            <h2 className="hero-contact-heading">
+              Got a question?<br />
+              <span className="hero-contact-italic">We're here.</span>
+            </h2>
+            <p className="hero-contact-sub">
+              Support, refunds, billing questions, or just feedback — reach out and we'll handle it personally.
+            </p>
+            <div className="hero-contact-badges">
+              <span className="hero-contact-badge">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                24-hour response
+              </span>
+              <span className="hero-contact-badge">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Hassle-free refunds
+              </span>
+              <span className="hero-contact-badge">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Human support
+              </span>
+            </div>
+          </motion.div>
+
+          {/* Right: form */}
+          <motion.div
+            className="hero-contact-right"
+            initial={{ opacity: 0, x: 24 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.7, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            <AnimatePresence mode="wait">
+              {cDone ? (
+                <motion.div
+                  key="done"
+                  className="hero-contact-success"
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <div className="hero-contact-success-icon">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  </div>
+                  <h3 className="hero-contact-success-title">Message sent!</h3>
+                  <p className="hero-contact-success-body">We'll get back to you within 24 hours.</p>
+                  <button className="hero-contact-success-reset" onClick={() => { setCDone(false); setCName(''); setCEmail(''); setCMsg('') }}>
+                    Send another
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.form
+                  key="form"
+                  className="hero-contact-form"
+                  onSubmit={handleContact}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <div className="hero-contact-field">
+                    <label className="hero-contact-label">Name</label>
+                    <input
+                      className="hero-contact-input"
+                      placeholder="Your name"
+                      value={cName}
+                      onChange={e => setCName(e.target.value)}
+                      required
+                      maxLength={100}
+                    />
+                  </div>
+                  <div className="hero-contact-field">
+                    <label className="hero-contact-label">Email</label>
+                    <input
+                      className="hero-contact-input"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={cEmail}
+                      onChange={e => setCEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="hero-contact-field">
+                    <div className="hero-contact-label-row">
+                      <label className="hero-contact-label">Message</label>
+                      <span className={`hero-contact-wordcount${cWords > 180 ? ' warn' : ''}${cOverLimit ? ' over' : ''}`}>
+                        {cWords} / {MAX_WORDS} words
+                      </span>
+                    </div>
+                    <textarea
+                      className={`hero-contact-input hero-contact-textarea${cOverLimit ? ' hero-contact-input--error' : ''}`}
+                      placeholder="Describe your question, issue, or feedback…"
+                      rows={5}
+                      value={cMsg}
+                      onChange={e => setCMsg(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <AnimatePresence>
+                    {cError && (
+                      <motion.p
+                        className="hero-contact-error"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                      >
+                        {cError}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
+                  <button
+                    type="submit"
+                    className="hero-contact-submit"
+                    disabled={cSubmitting || cOverLimit || !cName.trim() || !cEmail.trim() || !cMsg.trim()}
+                  >
+                    {cSubmitting ? <span className="upg-submit-spinner" /> : (
+                      <>
+                        Send message
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                      </>
+                    )}
+                  </button>
+                </motion.form>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Bottom CTA */}
       <ScatterReveal
         title="Start reading"
@@ -361,6 +531,8 @@ export default function Hero() {
         <a className="hero-footer-link" onClick={() => navigate('/privacy')}>Privacy Policy</a>
         <span className="hero-footer-sep">·</span>
         <a className="hero-footer-link" onClick={() => navigate('/terms')}>Terms of Service</a>
+        <span className="hero-footer-sep">·</span>
+        <a className="hero-footer-link" href="#contact">Contact</a>
       </footer>
     </div>
     </ReactLenis>

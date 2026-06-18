@@ -387,6 +387,54 @@ def subscription_status(request: Request, user_id: str = Depends(get_current_use
     }
 
 
+@app.post("/contact")
+@limiter.limit("5/hour")
+async def contact_form(
+    request: Request,
+    name: str = Form(...),
+    email: str = Form(...),
+    message: str = Form(...),
+):
+    word_count = len(message.split()) if message.strip() else 0
+    if word_count > 200:
+        raise HTTPException(status_code=422, detail="Message exceeds 200 words. Please shorten it.")
+    if len(name) > 100:
+        raise HTTPException(status_code=422, detail="Name is too long.")
+
+    resend_key = os.getenv("RESEND_API_KEY", "")
+    if resend_key:
+        html = f"""
+<h2 style="color:#D94F3D">New Contact Form Message</h2>
+<table border="1" cellpadding="10" cellspacing="0" style="border-collapse:collapse;font-family:sans-serif">
+  <tr><td><strong>Name</strong></td><td>{name}</td></tr>
+  <tr><td><strong>Email</strong></td><td><a href="mailto:{email}">{email}</a></td></tr>
+  <tr><td><strong>Message</strong></td><td style="white-space:pre-wrap;max-width:500px">{message}</td></tr>
+</table>
+<hr>
+<p><em>Reply to this email to respond directly to {name}.</em></p>
+"""
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(
+                    "https://api.resend.com/emails",
+                    headers={"Authorization": f"Bearer {resend_key}"},
+                    json={
+                        "from": "Folio Contact <onboarding@resend.dev>",
+                        "to": [ADMIN_EMAIL],
+                        "reply_to": email,
+                        "subject": f"Contact: {name}",
+                        "html": html,
+                    },
+                )
+                logger.info("contact: Resend status=%s", resp.status_code)
+                if resp.status_code not in (200, 201):
+                    logger.error("contact: Resend rejected: %s", resp.text)
+        except Exception:
+            logger.exception("contact: Resend failed")
+
+    return {"message": "Message sent! We'll get back to you within 24 hours."}
+
+
 @app.post("/upgrade-request")
 @limiter.limit("5/hour")
 async def upgrade_request(

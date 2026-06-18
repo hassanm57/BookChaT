@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { submitUpgradeRequest } from '../api'
+import ContactModal from '../components/ContactModal'
 
 const NAYAPAY_ACCOUNT_NAME = 'Hassan Mansoor'
 const NAYAPAY_IBAN = 'PK55NAYA1234503325560873'
@@ -108,6 +109,7 @@ export default function UpgradePage() {
   const navigate = useNavigate()
   const { user } = useAuth()
 
+  const [showContact, setShowContact] = useState(false)
   const [country, setCountry] = useState('')
   const [rates, setRates] = useState<Record<string, number>>(FALLBACK_RATES)
   const [ratesLive, setRatesLive] = useState(false)
@@ -560,10 +562,29 @@ export default function UpgradePage() {
                 We review every request within 24 hours. Your Folio account
                 ({user?.email ?? 'sign in first'}) will be activated once verified.
               </p>
+
+              {/* Refund / issue contact banner */}
+              <div className="upg-contact-banner">
+                <div className="upg-contact-banner-left">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  <span>Have an issue or refund request?</span>
+                </div>
+                <button className="upg-contact-banner-btn" type="button" onClick={() => setShowContact(true)}>
+                  Contact support
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </button>
+              </div>
             </form>
           </div>
         </motion.div>
       </div>
+
+      <ContactModal open={showContact} onClose={() => setShowContact(false)} />
     </div>
   )
 }

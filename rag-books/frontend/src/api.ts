@@ -100,6 +100,18 @@ export async function submitUpgradeRequest(formData: FormData): Promise<void> {
   }
 }
 
+export async function submitContact(data: { name: string; email: string; message: string }): Promise<void> {
+  const form = new FormData()
+  form.append('name', data.name)
+  form.append('email', data.email)
+  form.append('message', data.message)
+  const res = await fetch('/api/contact', { method: 'POST', body: form })
+  if (!res.ok) {
+    const json = await res.json().catch(() => null)
+    throw new Error(json?.detail ?? 'Failed to send. Please try again.')
+  }
+}
+
 export async function uploadBook(file: File, title: string, author: string, genre: string): Promise<Book> {
   const form = new FormData()
   form.append('file', file)

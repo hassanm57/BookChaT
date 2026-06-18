@@ -9,6 +9,7 @@ import BookCard from '../components/BookCard'
 import FeaturedPanel from '../components/FeaturedPanel'
 import OnboardingModal from '../components/OnboardingModal'
 import { ExpandingSearchDock } from '../components/ExpandingSearchDock'
+import ContactModal from '../components/ContactModal'
 
 const containerVariants = {
   hidden: {},
@@ -471,6 +472,7 @@ export default function Library() {
   const [uploadKey, setUploadKey] = useState(0)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showContact, setShowContact] = useState(false)
   const [subStatus, setSubStatus] = useState<{
     is_pro: boolean
     messages_used: number
@@ -610,6 +612,7 @@ export default function Library() {
   return (
     <div className="lib-page">
       {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
+      <ContactModal open={showContact} onClose={() => setShowContact(false)} />
 
       <AnimatePresence>
         {showUpload && (
@@ -847,6 +850,8 @@ export default function Library() {
           <button className="lib-footer-link" onClick={() => navigate('/privacy')}>Privacy</button>
           <span className="lib-footer-sep">·</span>
           <button className="lib-footer-link" onClick={() => navigate('/terms')}>Terms</button>
+          <span className="lib-footer-sep">·</span>
+          <button className="lib-footer-link" onClick={() => setShowContact(true)}>Contact</button>
         </span>
       </footer>
     </div>
