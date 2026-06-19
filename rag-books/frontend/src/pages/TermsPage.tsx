@@ -7,11 +7,11 @@ const EFFECTIVE_DATE = 'June 18, 2026'
 const CONTACT_EMAIL = 'legal@getfolio.app'
 const PRIVACY_EMAIL = 'privacy@getfolio.app'
 
-export default function TermsPage() {
+export default function TermsPage() { 
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
 
-  useEffect(() => {
+  useEffect(() => { // this is to ensure that the page scrolls smoothly and doesn't have any overflow issues when navigating to this page
     document.body.style.overflow = 'auto'
     document.documentElement.style.overflow = 'auto'
     document.documentElement.style.scrollBehavior = 'smooth'

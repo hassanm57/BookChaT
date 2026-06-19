@@ -25,7 +25,7 @@ export default function PricingPage() { // this is not implemented yet. shelving
   }, [])
 
   return (
-    <ReactLenis root options={{ lerp: 0.097, duration: 1.467, smoothWheel: true }}>
+    <ReactLenis root options={{ lerp: 0.09, duration: 1.465, smoothWheel: true }}>
       <div className="hero-page">
         {/* Nav */}
         <nav className="hero-nav">
