@@ -16,7 +16,7 @@ import httpx
 import logging
 
 import fitz
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -496,10 +496,9 @@ async def upgrade_request(
             if screenshot_url
             else "<p><em>Screenshot upload failed — check Supabase storage.</em></p>"
         )
-        admin_secret_val = os.getenv("ADMIN_SECRET", "YOUR_ADMIN_SECRET")
         activation_cmd = (
-            f"curl -X POST \"http://localhost:8000/admin/activate-pro"
-            f"?user_id={user_id}&admin_secret={admin_secret_val}\""
+            f'curl -X POST "http://localhost:8000/admin/activate-pro?user_id={user_id}" '
+            f'-H "X-Admin-Secret: $ADMIN_SECRET"'
         )
         html = f"""
 <h2 style="color:#D94F3D">New Pro Upgrade Request</h2>
@@ -546,9 +545,12 @@ async def upgrade_request(
 
 
 @app.post("/admin/test-email")
-async def admin_test_email(request: Request, admin_secret: str):
+async def admin_test_email(
+    request: Request,
+    x_admin_secret: str = Header(default="", alias="X-Admin-Secret"),
+):
     """Send a test email and return the raw Resend response — for debugging only."""
-    if not ADMIN_SECRET or admin_secret != ADMIN_SECRET:
+    if not ADMIN_SECRET or x_admin_secret != ADMIN_SECRET:
         raise HTTPException(status_code=403, detail="Forbidden")
     resend_key = os.getenv("RESEND_API_KEY", "")
     if not resend_key:
@@ -571,10 +573,10 @@ async def admin_test_email(request: Request, admin_secret: str):
 async def admin_activate_pro(
     request: Request,
     user_id: str,
-    admin_secret: str,
     days: int = 30,
+    x_admin_secret: str = Header(default="", alias="X-Admin-Secret"),
 ):
-    if not ADMIN_SECRET or admin_secret != ADMIN_SECRET:
+    if not ADMIN_SECRET or x_admin_secret != ADMIN_SECRET:
         raise HTTPException(status_code=403, detail="Forbidden")
     sb = get_supabase()
     period_end = (datetime.now(timezone.utc) + timedelta(days=days)).isoformat()
@@ -586,8 +588,12 @@ async def admin_activate_pro(
 
 
 @app.post("/admin/revoke-pro")
-async def admin_revoke_pro(request: Request, user_id: str, admin_secret: str):
-    if not ADMIN_SECRET or admin_secret != ADMIN_SECRET:
+async def admin_revoke_pro(
+    request: Request,
+    user_id: str,
+    x_admin_secret: str = Header(default="", alias="X-Admin-Secret"),
+):
+    if not ADMIN_SECRET or x_admin_secret != ADMIN_SECRET:
         raise HTTPException(status_code=403, detail="Forbidden")
     sb = get_supabase()
     sb.table("subscriptions").upsert(
